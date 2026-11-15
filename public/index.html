@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lanzarote 2026 - Itinerario & Mappa</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{
+    --ink:#1d2b30; --paper:#f4f1ea; --line:#d8d0c2; --soft:#fbf9f4;
+    --blu:#2f6f9f; --verde:#3f8f5b; --arancio:#d98019; --viola:#7a5a9c; --rosso:#b5483d;
+    --surface:#ffffff; --text:#1d2b30; --text2:#5d6b70; --text3:#3a474c;
+    --hover:#eef4f8; --chip:#efebe0; --band:#c9bfa8; --shadow:rgba(0,0,0,.25);
+  }
+  body.dark{
+    --paper:#161a1d; --line:#33403f; --soft:#1e2427; --ink:#e8ebe6;
+    --surface:#1f2629; --text:#e8ebe6; --text2:#9fb0b2; --text3:#c3ccc9;
+    --hover:#243640; --chip:#2a3236; --band:#3a4a45; --shadow:rgba(0,0,0,.6);
+    --blu:#5f9fd0; --verde:#5fb07a; --arancio:#e09a4a; --viola:#a583c4; --rosso:#d77067;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--paper)}
+  #wrap{display:flex;flex-direction:column;height:100vh}
+  header{padding:13px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex:none}
+  header h1{margin:0;font-size:16px;letter-spacing:.3px}
+  #themebtn{flex:none;width:38px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;line-height:1}
+  #themebtn:hover{background:var(--hover)}
+  header p{margin:4px 0 0;font-size:12px;color:var(--text2)}
+  #controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:9px 18px;border-bottom:1px solid var(--line);background:var(--soft);flex:none}
+  select{font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);min-width:240px}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;align-items:center}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid rgba(0,0,0,.15)}
+  /* layout principale: pannello + mappa */
+  #main{flex:1;display:flex;min-height:0}
+  #panel{width:360px;max-width:42%;border-right:1px solid var(--line);background:var(--surface);overflow-y:auto;flex:none}
+  #map{flex:1;min-height:300px}
+  .daynote{padding:11px 16px;font-size:12.5px;background:var(--soft);border-bottom:1px solid var(--line);color:var(--text3);line-height:1.5}
+  .daynote b{color:var(--text)} .warn{color:var(--rosso);font-weight:600}
+  .daybar{padding:9px 16px;border-bottom:1px solid var(--line);background:var(--surface);font-size:11.5px;line-height:1.6}
+  .daybar .row{display:flex;gap:7px;align-items:flex-start;margin-bottom:3px}
+  .daybar .row:last-child{margin-bottom:0}
+  .daybar .k{flex:none;font-weight:700;color:var(--text2);min-width:74px}
+  .daybar .v{color:var(--text)}
+  .daybar .ico{flex:none;width:16px;text-align:center}
+  .stop{padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;display:flex;gap:11px;align-items:flex-start}
+  .stop:hover{background:var(--soft)}
+  .stop.active{background:var(--hover);border-left:4px solid var(--blu)}
+  .stop .badge{flex:none;width:26px;height:26px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px var(--shadow)}
+  .stop .body{flex:1;min-width:0}
+  .stop .nm{font-size:13.5px;font-weight:600;line-height:1.3;margin-bottom:2px}
+  .stop .meta{font-size:11.5px;color:var(--text2);margin-bottom:4px}
+  .stopimg{width:100%;height:150px;object-fit:cover;object-position:center;border-radius:8px;margin:5px 0 7px;display:block;background:var(--soft)}
+  .frozen{font-size:12px;line-height:1.5;color:#2f6f9f;background:rgba(95,159,208,.12);border-left:3px solid #5f9fd0;padding:7px 10px;border-radius:6px;margin:7px 0}
+  body.dark .frozen{color:#9fd0ef;background:rgba(95,159,208,.16)}
+  @media(max-width:760px){.stopimg{height:180px}}
+  .stop .tip{font-size:11.5px;line-height:1.45;color:var(--text3)}
+  /* badge del mezzo, appoggiato a metà tratta sulla mappa */
+  .legbadge{transform:translate(-50%,-50%);display:inline-block;white-space:nowrap;font-size:11px;font-weight:700;
+    padding:2px 7px;border-radius:11px;background:var(--surface);color:var(--text);
+    border:1px solid var(--line);box-shadow:0 1px 4px var(--shadow)}
+  .legs{margin-top:3px}
+  .leg{display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-top:1px dashed var(--line)}
+  .leg:first-child{border-top:0}
+  .leg .lg-ic{flex:none;width:20px;text-align:center;font-size:13px;line-height:1.5}
+  .leg .lg-tx{flex:1;min-width:0;color:var(--text3);line-height:1.45}
+  .leg .lg-tx b{color:var(--text)}
+  .leg .lg-ln{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:8px;
+    background:var(--chip);color:var(--text2);margin-left:5px;vertical-align:1px}
+  .schem{font-size:10.5px;color:var(--text2);font-weight:400;font-style:italic}
+  .tgl{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text3);
+    border:1px solid var(--line);border-radius:7px;padding:5px 9px;background:var(--surface);cursor:pointer}
+  .tgl input{margin:0;cursor:pointer}
+  .eatlink{color:var(--blu);text-decoration:none}
+  .eatlink:hover{text-decoration:underline}
+  .stop .desc{font-size:12px;line-height:1.55;color:var(--text3);margin-top:6px}
+  .vtab{border:none;background:var(--surface);padding:7px 13px;font-size:13px;cursor:pointer;color:var(--text2);font-family:inherit}
+  .vtab.active{background:var(--blu);color:#fff;font-weight:600}
+  .svcbtn{display:inline-block;font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--blu);text-decoration:none;white-space:nowrap}
+  .svcbtn:hover{background:var(--soft)}
+  #tabletbl{border-collapse:collapse;width:100%;font-size:12.5px}
+  #tabletbl th{background:var(--ink);color:#fff;text-align:left;padding:9px 11px;position:sticky;top:0;font-weight:600;white-space:nowrap}
+  #tabletbl td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;line-height:1.45;color:var(--text)}
+  #tabletbl tr:nth-child(even) td{background:var(--soft)}
+  #tabletbl .cityband td{background:var(--band);font-weight:700;font-size:13px}
+  #tabletbl .date{white-space:nowrap;font-weight:600}
+  #tabletbl .warn{color:var(--rosso);font-weight:600}
+  .stop .time{display:inline-block;font-size:10.5px;color:var(--text2);background:var(--chip);padding:1px 7px;border-radius:10px;margin-bottom:3px}
+  .stop a.maps{font-size:11px;color:var(--blu);text-decoration:none;display:inline-block;margin-top:4px}
+  .stop a.maps:hover{text-decoration:underline}
+  .leaflet-popup-content{font-size:13px;line-height:1.45;margin:11px 13px}
+  .leaflet-popup-content h4{margin:0 0 4px;font-size:14px}
+  .leaflet-popup-content .pm{color:var(--text2);font-size:11.5px;margin-bottom:5px}
+  .numicon{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;border-radius:50%;width:26px;height:26px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  /* approfondimenti architettonici: <details> chiuso di default */
+  details.arch{margin-top:7px;border:1px solid var(--line);border-radius:8px;background:var(--soft);overflow:hidden}
+  details.arch>summary{cursor:pointer;list-style:none;padding:7px 10px;font-size:11.5px;font-weight:700;color:var(--blu);display:flex;align-items:center;gap:6px;-webkit-user-select:none;user-select:none}
+  details.arch>summary::-webkit-details-marker{display:none}
+  details.arch>summary::after{content:'▾';margin-left:auto;transition:transform .15s}
+  details.arch[open]>summary::after{transform:rotate(180deg)}
+  details.arch>summary:hover{background:var(--hover)}
+  .arch-body{padding:9px 10px 10px;font-size:12px;line-height:1.6;color:var(--text3);border-top:1px solid var(--line)}
+  .arch-body p{margin:0 0 7px} .arch-body p:last-child{margin-bottom:0}
+  .arch-body .k{font-weight:700;color:var(--text2)}
+  /* biglietti PDF */
+  .tickets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+  .ticket{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--blu);text-decoration:none;font-weight:600}
+  .ticket:hover{background:var(--hover)}
+  /* orari del giorno */
+  .sched{width:100%;border-collapse:collapse;font-size:11.5px;margin:7px 0 2px}
+  .sched td{border-bottom:1px solid var(--line);padding:5px 6px;vertical-align:top;color:var(--text3)}
+  .sched tr:last-child td{border-bottom:none}
+  .sched .h{white-space:nowrap;font-weight:700;color:var(--text);width:1%;font-variant-numeric:tabular-nums}
+  /* maniglia per ridimensionare il pannello (solo desktop) */
+  #gutter{flex:none;width:7px;cursor:col-resize;background:var(--line);position:relative}
+  #gutter::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:3px;height:34px;border-radius:2px;background:var(--text2);opacity:.45}
+  #gutter:hover,#gutter.dragging{background:var(--blu)}
+  #gutter:hover::before,#gutter.dragging::before{background:#fff;opacity:.9}
+  body.resizing{cursor:col-resize;-webkit-user-select:none;user-select:none}
+  body.resizing #map{pointer-events:none}
+  /* vista gourmet */
+  .gm{max-width:1020px;margin:0 auto;padding:22px 18px 64px;font-size:13.5px;line-height:1.6;color:var(--text3)}
+  .gm h2{margin:0 0 4px;font-size:22px;color:var(--text);letter-spacing:.2px}
+  .gm .sub{margin:0 0 4px;font-size:12.5px;color:var(--text2);max-width:70ch}
+  .gm-toc{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 26px;padding-top:16px;border-top:1px solid var(--line)}
+  .gm-toc a{font-size:11.5px;text-decoration:none;color:var(--text2);background:var(--chip);
+    border-radius:20px;padding:5px 11px;white-space:nowrap}
+  .gm-toc a:hover{background:var(--blu);color:#fff}
+  .gm section{margin:0 0 34px;scroll-margin-top:12px}
+  .gm h3{margin:0 0 12px;font-size:15.5px;color:var(--text);display:flex;align-items:baseline;gap:9px;
+    padding-bottom:7px;border-bottom:2px solid var(--band)}
+  .gm h3 .n{flex:none;font-size:11px;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums}
+  .gm h4{margin:20px 0 9px;font-size:13px;color:var(--text);text-transform:uppercase;letter-spacing:.6px}
+  .gm p{margin:0 0 11px;max-width:78ch}
+  .gm b{color:var(--text)}
+  .gm .no{font-style:italic;color:var(--text)}
+  .gm ul{margin:0 0 11px;padding-left:20px;max-width:78ch}
+  .gm li{margin-bottom:5px}
+  /* schede piatto */
+  .dishes{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:11px;margin:12px 0 4px}
+  .dish{border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:var(--soft)}
+  .dish .dn{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:1px}
+  .dish .dp{font-size:11px;color:var(--text2);margin-bottom:6px}
+  .dish .dd{font-size:12.5px;line-height:1.5}
+  .dish .dw{font-size:11.5px;line-height:1.45;color:var(--text2);margin-top:7px;padding-top:7px;border-top:1px dashed var(--line)}
+  .dish.top{background:rgba(47,111,159,.07);border-color:var(--blu)}
+  .must{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    background:var(--blu);color:#fff;border-radius:4px;padding:2px 5px;vertical-align:2px;margin-left:6px}
+  .seas{background:var(--arancio)}
+  .nope{background:var(--text2)}
+  /* riquadri */
+  .gm-box{border-left:3px solid var(--blu);background:var(--soft);border-radius:0 9px 9px 0;
+    padding:12px 15px;margin:14px 0;font-size:12.5px}
+  .gm-box.att{border-left-color:var(--rosso);background:rgba(181,72,61,.07)}
+  .gm-box.win{border-left-color:var(--verde);background:rgba(63,143,91,.08)}
+  .gm-box .bt{font-weight:700;color:var(--text);display:block;margin-bottom:4px}
+  .gm-box p:last-child{margin-bottom:0}
+  /* calendario */
+  .gmcal{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}
+  .gmcal th{background:var(--ink);color:#fff;text-align:left;padding:7px 10px;font-weight:600}
+  .gmcal td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;color:var(--text)}
+  .gmcal tr:nth-child(even) td{background:var(--soft)}
+  .gmcal .d{white-space:nowrap;font-weight:600}
+  .gmcal .gmstop{color:var(--rosso);font-weight:600}
+  .gm-foot{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--text2)}
+  @media(max-width:760px){
+    html,body{height:auto}
+    #wrap{height:auto;min-height:100vh}
+    header{padding:10px 14px} header h1{font-size:14px} header p{font-size:11px}
+    #controls{padding:8px 14px;gap:9px}
+    select{min-width:0;width:100%;font-size:15px}
+    .legend{font-size:10.5px;gap:8px}
+    #main{flex-direction:column;flex:none;min-height:0}
+    #map{order:1;height:40vh;min-height:220px;flex:none}
+    #panel{order:2;width:100%;max-width:none;flex:none;overflow:visible;border-right:none;border-top:1px solid var(--line)}
+    #tableview,#checkview,#gourmetview{flex:none}
+    /* con più tab la riga non entra in un telefono stretto: scorre invece di sfondare la pagina */
+    #viewtabs{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .vtab{padding:7px 11px;font-size:12.5px;white-space:nowrap}
+    .gm{padding:16px 14px 48px}
+    .dishes{grid-template-columns:1fr}
+    .stop{padding:13px 14px}
+    .stop .nm{font-size:14.5px}
+    .stop .desc{font-size:13px}
+    .daybar{font-size:12.5px}
+    /* niente ridimensionamento su mobile: il layout è a colonna */
+    #gutter{display:none}
+    .arch-body{font-size:12.5px}
+    .ticket,.sched{font-size:12.5px}
+  }
+  body.dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.9)}
+  /* foto da Wikipedia */
+  .ph{position:relative;margin:5px 0 7px}
+  .ph .stopimg{margin:0}
+  .ph .cr{position:absolute;right:6px;bottom:6px;font-size:10px;padding:2px 6px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;text-decoration:none}
+  .ph .cap{font-size:10.5px;color:var(--text2);margin-top:3px}
+  /* luce del giorno */
+  .sunbar{position:relative;height:8px;border-radius:4px;background:var(--chip);margin:5px 0 3px;overflow:hidden}
+  .sunbar .sun{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#e8b44a,#f3d27a,#e8b44a);opacity:.9}
+  .sunbar .tk{position:absolute;top:1px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--blu);border:1px solid var(--surface)}
+  .sunscale{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text2)}
+  /* frecce giorno */
+  #daynav{display:inline-flex;gap:6px;align-items:center}
+  .navbtn{width:34px;height:34px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--text);font-size:15px;cursor:pointer}
+  .navbtn:disabled{opacity:.35;cursor:default}
+  .navbtn:not(:disabled):hover{background:var(--hover)}
+  /* checklist */
+  .ck{max-width:760px;margin:0 auto;padding:18px}
+  .ck h2{margin:0 0 3px;font-size:17px}
+  .ck .sub{margin:0 0 16px;font-size:12px;color:var(--text2)}
+  .ck h3{margin:20px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--text2)}
+  .ckrow{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--soft);margin-bottom:7px;cursor:pointer;font-size:13.5px;color:var(--text)}
+  .ckrow input{margin-top:3px;width:17px;height:17px;flex:none;cursor:pointer;accent-color:var(--verde)}
+  .ckrow small{display:block;font-size:11.5px;color:var(--text2);margin-top:2px;line-height:1.45}
+  .ckrow.done{opacity:.6} .ckrow.done .t{text-decoration:line-through}
+  .ckbar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden;margin:4px 0 4px}
+  .ckbar i{display:block;height:100%;background:var(--verde)}
+  @media(max-width:760px){
+    #daynav{width:100%} #daynav select{flex:1}
+    .ck{padding:14px}
+  }
+
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div>
+        <h1>Lanzarote · 2-9 dicembre 2026 · Vincenzo, Roberta, Francesca e Caterina (5 anni)</h1>
+        <p>Seleziona il giorno. L'itinerario è a sinistra: clicca una tappa per centrarla sulla mappa. Base a Playa Blanca, auto a noleggio, orari in ora locale (un'ora indietro rispetto all'Italia).</p>
+      </div>
+      <button id="themebtn" title="Cambia tema" aria-label="Cambia tema chiaro/scuro">🌙</button>
+    </div>
+  </header>
+  <div id="controls">
+    <div id="viewtabs" style="display:flex;gap:0;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex:none">
+      <button id="tab-map" class="vtab active">Mappa per giorno</button>
+      <button id="tab-table" class="vtab">Tabella completa</button>
+      <button id="tab-gourmet" class="vtab">Gourmet</button>
+      <button id="tab-check" class="vtab">Checklist</button>
+    </div>
+    <div id="daynav">
+      <button class="navbtn" id="prevday" aria-label="Giorno precedente">◀</button>
+      <select id="daysel"></select>
+      <button class="navbtn" id="nextday" aria-label="Giorno successivo">▶</button>
+    </div>
+    <div id="svcbtns" style="display:inline-flex;gap:7px;flex-wrap:wrap">
+      <a class="svcbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/supermercado/@28.8602,-13.8010,15z">🛒 Supermercati ↗</a>
+      <a class="svcbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/farmacia/@28.8602,-13.8010,15z">+ Farmacie ↗</a>
+      <a class="svcbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/gasolinera/@28.8602,-13.8010,13z">⛽ Benzina ↗</a>
+    </div>
+    <label class="tgl" title="Sovrappone la rete di bus (guaguas) di OpenStreetMap">
+      <input type="checkbox" id="ptnet"> 🚌 Rete bus
+    </label>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--blu)"></i>Programma</span>
+      <span><i class="dot" style="background:var(--arancio)"></i>Opzionale</span>
+      <span><i class="dot" style="background:var(--verde)"></i>Alternativa</span>
+      <span><i class="dot" style="background:var(--viola)"></i>Alloggi</span>
+    </div>
+  </div>
+  <div id="main">
+    <aside id="panel"></aside>
+    <div id="gutter" title="Trascina per allargare o stringere · doppio clic per rimettere la larghezza di default" role="separator" aria-orientation="vertical"></div>
+    <div id="map"></div>
+  </div>
+  <div id="tableview" style="display:none;flex:1;overflow:auto;background:var(--surface)"></div>
+  <div id="gourmetview" style="display:none;flex:1;overflow:auto;background:var(--surface)"></div>
+  <div id="checkview" style="display:none;flex:1;overflow:auto;background:var(--surface)"></div>
+</div>
+<script>
+const C={blu:'#2f6f9f',verde:'#3f8f5b',arancio:'#d98019',viola:'#7a5a9c'};
+const CITY='Lanzarote';
+const HOTEL={name:'Gran Tagoro 5*, Family & Fun',q:'Gran Castillo Tagoro Family & Fun Playa Blanca',lat:28.8602,lng:-13.8010,track:'hotel',wiki:['Playa_Blanca','Playa_Blanca,_Lanzarote'],wikiCap:'Playa Blanca',
+  meta:'Calle Hoya de Afre 2, Playa Blanca · check-in 2/12 dalle 15:00 · check-out 9/12 entro le 11:00',
+  tip:'Gold Level Senior Suite vista oceano, mezza pensione. Si paga all’arrivo.',
+  desc:'<b>Calle Hoya de Afre 2, Playa Blanca.</b> Gold Level Senior Suite vista oceano per 2 adulti e le gemelle, <b>mezza pensione</b>: colazione e cena in hotel, il pranzo si fa fuori durante le gite. Check-in mercoledì 2/12 dalle 15:00, check-out mercoledì 9/12 entro le 11:00.<br><br><b>Pagamento:</b> nessun anticipo, si paga all’arrivo in euro. La carta deve essere intestata a chi alloggia. Al check-in servono i documenti di tutti, <b>anche delle bambine</b>.<br><br><b>Per le bambine:</b> è un hotel pensato per le famiglie, con piscine per bambini con scivoli e il kids club Castleland. Le fasce d’età e gli orari del club si chiedono alla reception.<br><br><b>Posizione:</b> sul lato est di Playa Blanca, la punta sud dell’isola. Marina Rubicón e Playa Dorada sono a pochi minuti, l’aeroporto a circa 35 minuti in auto. Telefono 0034 922 979 281.'};
+function stay(base,line){return Object.assign({},base,{tip:'',desc:line,wiki:[]});}
+const MEMO='<b>Gran Tagoro, Playa Blanca.</b> Cena in hotel (mezza pensione).';
+
+const DAYS=[
+ {id:'2/12 · Arrivo a Playa Blanca',theme:'Arrivo',sun:['07:32','17:58'],
+  transport:'Auto CICAR ritirata in aeroporto (Terminal 1), poi circa 35 minuti fino a Playa Blanca lungo la LZ-2.',food:'Cena in hotel',
+  sched:[['12:55 → 16:00','Volo <b>FR9463</b> Milano Malpensa → Lanzarote · ora locale, un’ora indietro rispetto all’Italia'],['~16:30','Ritiro auto CICAR al Terminal 1 · Jeep Compass o simile, 2 seggiolini inclusi'],['~17:15','Check-in al Gran Tagoro'],['17:58','Tramonto: due passi fino a Playa Dorada'],['sera','Cena in hotel']],
+  eat:'Cena in hotel, compresa nella mezza pensione.',flex:'Nessun programma',
+  note:'Arrivo nel pomeriggio, auto e hotel. A Lanzarote è <b>un’ora indietro</b> rispetto all’Italia. A inizio dicembre fa buio verso le 18 e di giorno ci sono 21-22 °C: costume e crema solare a portata di mano, ma anche una felpa per la sera, perché tira quasi sempre vento.<br><br><span class="warn">Auto:</span> la riconsegna è prenotata il 9/12 alle 16:00, ma il volo di ritorno parte alle 16:35. <b>Va spostata verso le 14:00</b>: vedi la Checklist.<br><br><b>Bagagli:</b> solo Vincenzo ha un bagaglio da stiva da 20 kg. Gli altri tre hanno solo la borsa piccola sotto il sedile: creme, liquidi oltre i 100 ml e souvenir vanno in quella valigia.',
+  legs:[{m:'car',a:'blu1',b:'H',t:'~35 min lungo la LZ-2 verso sud. Il navigatore porta a Calle Hoya de Afre.'},{m:'walk',a:'H',b:'blu2',t:'Pochi minuti lungo il mare, per il tramonto.'}],
+  pts:[HOTEL,
+   {name:'Aeroporto di Lanzarote (ACE)',q:'Aeropuerto de Lanzarote',wiki:['Lanzarote_Airport','César_Manrique-Lanzarote_Airport'],lat:28.9455,lng:-13.6052,track:'blu',n:1,time:'16:00 · atterraggio',meta:'Terminal 1 · banco CICAR',
+    desc:'L’aeroporto porta il nome di César Manrique, l’artista che ha disegnato mezza isola: lo incontrerete in ogni gita. Il banco <b>CICAR</b> è nella sala arrivi del Terminal 1. Il numero del volo è nella prenotazione: se l’aereo ritarda, avvisate comunque CICAR. I due seggiolini per le gemelle sono già inclusi: controllate che siano montati prima di partire.',cid:''},
+   {name:'Playa Dorada al tramonto',q:'Playa Dorada Playa Blanca',wiki:['Playa_Blanca','Playa_Blanca,_Lanzarote'],lat:28.8605,lng:-13.8175,track:'blu',n:2,time:'17:45 · 30 min',meta:'Spiaggia · acqua calma',
+    desc:'La spiaggia di sabbia chiara accanto all’hotel, riparata e con acqua calma: una delle più adatte ai bambini piccoli di tutta l’isola. Il primo giorno basta una passeggiata sul lungomare per vedere il sole che tramonta verso Fuerteventura, che sta proprio di fronte.',cid:''}]},
+
+ {id:'3/12 · Timanfaya, El Golfo e la costa ovest',theme:'Vulcani e costa ovest',sun:['07:33','17:58'],
+  transport:'In auto: da Playa Blanca a Timanfaya circa 30 minuti. Poi El Golfo, Los Hervideros e le saline sono tutti sulla stessa strada costiera (LZ-703), di ritorno verso sud.',food:'Pranzo a El Diablo, dentro Timanfaya',
+  eat:'Pranzo a <b>El Diablo</b>, il ristorante dentro il parco, dove la carne si cuoce sul calore del vulcano: aperto 12-16, non si prenota. In alternativa, i ristoranti di pesce sul lungomare di <b>El Golfo</b>, come <b>El Pescador Casa Barriguita</b>. Cena in hotel.',flex:'Timanfaya a orario fisso',
+  note:'La giornata dei vulcani. <span class="warn">Timanfaya si prenota online:</span> dal 15 giugno 2026 non c’è più la biglietteria, si compra il biglietto con giorno e orario, e fuori dalla fascia scelta non si entra. Scegliete la fascia delle 10:30. Le gemelle, sotto i 7 anni, entrano gratis.<br><br><b>Ordine della giornata:</b> prima i cammelli, che stanno sulla strada d’ingresso e chiudono presto, poi il parco, pranzo a El Diablo, e nel pomeriggio la costa ovest verso sud fino alle saline, con il sole che scende sul mare.',
+  legs:[{m:'car',a:'H',b:'blu1',t:'~25 min verso Yaiza e la LZ-67. L’Echadero è sulla destra prima dell’ingresso del parco.'},{m:'car',a:'blu1',b:'blu2',t:'5 min fino all’Islote de Hilario, dove parte il pullman della Ruta de los Volcanes.'},{m:'car',a:'blu2',b:'blu3',t:'~20 min scendendo verso la costa.'},{m:'car',a:'blu3',b:'blu4',t:'5 min verso sud sulla LZ-703.'},{m:'car',a:'blu4',b:'blu5',t:'5 min.'},{m:'car',a:'blu5',b:'H',t:'~20 min fino a Playa Blanca.'}],
+  pts:[stay(HOTEL,MEMO),
+   {name:'Echadero de los Camellos',q:'Echadero de los Camellos Timanfaya',wiki:['Timanfaya_National_Park'],lat:28.9760,lng:-13.7960,track:'blu',n:1,time:'09:30 · 30 min',meta:'Passeggiata in dromedario · 9:30-15:30 · si paga sul posto',
+    kids:'🐪 <b>Per le gemelle:</b> si sale in due su una sella doppia, una per lato, e il dromedario si alza in tre scatti. Il giro dura circa 20 minuti lungo il fianco del vulcano.',
+    tip:'Il prezzo è cambiato di recente: le fonti danno tra 6 e 11 € a persona.',
+    desc:'Il punto di partenza delle passeggiate in dromedario sulle pendici di Timanfaya, una tradizione dell’isola: i dromedari sono stati per secoli l’animale da lavoro dei campi di Lanzarote. Accanto c’è un piccolo museo. Si va per primi perché le partenze finiscono verso le 15:30 e a metà mattina arrivano i pullman delle escursioni.',cid:''},
+   {name:'★ Timanfaya · Montañas del Fuego',q:'Montañas del Fuego Timanfaya',wiki:['Timanfaya_National_Park','Montañas_del_Fuego'],lat:29.0030,lng:-13.7550,track:'blu',n:2,time:'10:30 · 1 ora e mezza',meta:'Biglietto online con orario · gratis sotto i 7 anni',
+    kids:'🌋 <b>Gli esperimenti del vulcano:</b> all’Islote de Hilario la guida butta un secchio d’acqua in un buco e dopo pochi secondi esce un geyser di vapore; un ciuffo di sterpaglia messo in una fossa prende fuoco da solo. Sotto i piedi, a pochi metri, ci sono centinaia di gradi.',
+    arch:'<p><span class="k">Un paesaggio del Settecento.</span> Tra il 1730 e il 1736 una serie di eruzioni coprì un quarto dell’isola, seppellendo villaggi e i terreni più fertili: è una delle eruzioni basaltiche storiche più lunghe che si conoscano. Una seconda eruzione, più piccola, arrivò nel 1824. Parco nazionale dal 1974.</p><p><span class="k">Il percorso come progetto.</span> La Ruta de los Volcanes, circa 14 km, si fa solo con il pullman del parco: è il modo di proteggere un suolo che non si è ancora ricoperto di vegetazione. Il tracciato è stato disegnato da Jesús Soto, collaboratore di Manrique, perché coni e crateri si aprissero uno dopo l’altro, come inquadrature.</p>',
+    desc:'Il cuore del parco nazionale: un mare di lava e di coni vulcanici rossi, neri e ocra. Il biglietto comprende il giro in pullman sulla <b>Ruta de los Volcanes</b>, circa 35 minuti con commento registrato, e le dimostrazioni geotermiche all’Islote de Hilario. Dal pullman non si scende: il paesaggio si guarda dai finestrini. Prezzi 2026 riportati dalle guide: 30 € adulti; le gemelle entrano gratis. Controllate su cactlanzarote.com al momento di comprare.',cid:''},
+   {name:'El Diablo · pranzo sul vulcano',q:'Restaurante El Diablo Timanfaya',wiki:['Timanfaya_National_Park'],lat:29.0034,lng:-13.7556,track:'blu',n:3,time:'12:15 · pranzo',meta:'Dentro il parco · 12-16 · senza prenotazione',
+    arch:'<p><span class="k">Manrique, 1970.</span> Edificio circolare in pietra lavica e vetro, aperto a 360° sul campo di lava. Al centro c’è la griglia: un pozzo scavato nel terreno da cui sale il calore del vulcano, su cui si cuociono carne e pesce. È il caso più letterale di architettura che usa il luogo come impianto.</p>',
+    desc:'Il ristorante dentro il parco, all’Islote de Hilario, dove pollo, carne e pesce si cuociono sul calore naturale del vulcano. Non si prenota: arrivate verso mezzogiorno, appena apre, prima della folla. Con le bambine funziona bene: carne alla griglia e papas arrugadas.',cid:''},
+   {name:'El Golfo e Charco de los Clicos',q:'Charco de los Clicos El Golfo',wiki:['Charco_de_los_Clicos','El_Golfo,_Lanzarote'],lat:28.9707,lng:-13.8296,track:'blu',n:4,time:'14:30 · 1 ora',meta:'Gratis · laguna verde · non si fa il bagno',
+    desc:'Una laguna color verde smeraldo dentro il cratere di un vulcano tagliato a metà dal mare, separata dall’oceano da una spiaggia di sabbia nera. Il verde è dato da alghe e minerali. Si guarda dal sentiero panoramico sopra la laguna: è protetta e non si scende a fare il bagno. Il villaggio di El Golfo, accanto, è una fila di ristoranti di pesce sul mare.',cid:''},
+   {name:'Los Hervideros',q:'Los Hervideros Lanzarote',wiki:['Los_Hervideros'],lat:28.9487,lng:-13.8298,track:'blu',n:5,time:'15:45 · 30 min',meta:'Gratis · scogliera di lava',
+    kids:'🌊 <b>Attenzione:</b> i camminamenti sono stretti, tra muretti bassi e scogli. Tenete le bambine per mano: il mare entra con forza nelle grotte.',
+    desc:'Il punto in cui la lava si è tuffata nell’oceano, formando grotte e camini in cui il mare “bolle” (<i>hervir</i>) e sbuffa spruzzi in alto. Un percorso a piedi su sentieri di lava porta a diversi affacci. Più il mare è mosso, più è spettacolare.',cid:''},
+   {name:'Salinas de Janubio',q:'Salinas de Janubio',wiki:['Salinas_de_Janubio'],lat:28.9335,lng:-13.8240,track:'blu',n:6,time:'16:30 · 20 min',meta:'Gratis dal belvedere',
+    desc:'Le saline più grandi delle Canarie: una scacchiera di vasche bianche, rosa e grigie in una laguna tra il vulcano e il mare. Si guardano dal belvedere sulla strada. Il sale di Janubio si compra nei negozi dell’isola ed è un buon souvenir. Da qui all’hotel sono 20 minuti.',cid:''}]},
+
+ {id:'4/12 · Playas de Papagayo',theme:'Spiaggia e piscina',sun:['07:33','17:58'],
+  transport:'In auto: 15 minuti fino al parcheggio delle Playas de Papagayo, l’ultimo tratto su strada sterrata. <b>Parcheggio a pagamento, 3 €, solo carta</b>: in contanti non si entra.',food:'Pranzo al sacco in spiaggia',
+  eat:'Pranzo al sacco: comprate tutto la mattina in un supermercato di Playa Blanca, sulle calette i servizi sono quasi assenti. Cena in hotel.',flex:'Giornata libera e lenta',
+  note:'La giornata di mare. Le <b>Playas de Papagayo</b> sono cinque calette di sabbia chiara dentro il Monumento Natural de Los Ajaches, a sud-est di Playa Blanca: acqua turchese e riparata, perfetta per le bambine. Andateci la mattina, quando c’è meno vento e più posto. Nel pomeriggio, piscine e kids club dell’hotel.<br><br><b>Il mare a dicembre</b> è intorno ai 20 °C: si fa il bagno, ma per i bambini un costume con le maniche aiuta.',
+  legs:[{m:'car',a:'H',b:'blu1',t:'~15 min, l’ultimo tratto su sterrato. Parcheggio aperto 9-19.'},{m:'car',a:'blu1',b:'H',t:'Rientro per pranzo o nel primo pomeriggio.'}],
+  pts:[stay(HOTEL,MEMO),
+   {name:'Playas de Papagayo',q:'Playa de Papagayo Lanzarote',wiki:['Papagayo_Beach','Playa_de_Papagayo','Los_Ajaches'],lat:28.8425,lng:-13.7865,track:'blu',n:1,time:'10:00 → 14:00',meta:'Parcheggio 3 €, solo carta · servizi quasi assenti',
+    kids:'🏖️ <b>Per le gemelle:</b> la caletta di <b>Papagayo</b> e la più grande <b>Playa Mujeres</b> hanno l’acqua più calma. Portate secchielli: la sabbia è fine e si costruisce bene.',
+    desc:'Calette di sabbia dorata separate da promontori di roccia scura, con vista su Fuerteventura e Lobos. Il fondale scende dolce. Non c’è ombra: ombrellone o tenda da spiaggia, acqua e crema solare sono indispensabili, anche a dicembre.',cid:''}]},
+
+ {id:'5/12 · Il nord: Jameos del Agua e Mirador del Río',theme:'Manrique al nord',sun:['07:34','17:58'],
+  transport:'In auto: circa un’ora da Playa Blanca ai Jameos del Agua, sulla LZ-2 e poi la LZ-1 verso nord. Poi tutto vicino: 20 minuti al Mirador, 10 a Haría, 25 al Jardín de Cactus. Rientro circa 50 minuti.',food:'Pranzo ad Haría',
+  eat:'Pranzo ad <b>Haría</b>, il paese delle palme: bar e ristoranti sulla piazza principale. Cena in hotel.',flex:'Cueva de los Verdes opzionale',
+  note:'La giornata più lunga in auto, e quella più bella per l’architettura: tre opere di César Manrique in poche ore. Partite verso le 9. <b>Jameos del Agua, Mirador del Río e Jardín de Cactus</b> sono centri del Cabildo (CACT): se ne fate tre o più, il biglietto combinato costa meno di quelli singoli. Le gemelle, sotto i 7 anni, entrano gratis ovunque.<br><br>La <b>Cueva de los Verdes</b>, accanto ai Jameos, si prenota solo online con orario. È una visita guidata in un tunnel di lava, al buio e con qualche scalino: bella, ma con le bambine valutate se basta già il resto.',
+  legs:[{m:'car',a:'H',b:'blu1',t:'~1 ora verso nord. Partenza verso le 9.'},{m:'car',a:'blu1',b:'arancio2',t:'2 minuti, solo se si fa la grotta.'},{m:'car',a:'blu1',b:'blu3',t:'~20 min salendo verso il Risco de Famara.'},{m:'car',a:'blu3',b:'blu4',t:'~10 min in discesa nella valle delle palme.'},{m:'car',a:'blu4',b:'blu5',t:'~25 min verso sud fino a Guatiza.'},{m:'car',a:'blu5',b:'H',t:'~50 min fino a Playa Blanca.'}],
+  pts:[stay(HOTEL,MEMO),
+   {name:'★ Jameos del Agua',q:'Jameos del Agua',wiki:['Jameos_del_Agua'],lat:29.1575,lng:-13.4316,track:'blu',n:1,time:'10:00 · 1 ora',meta:'CACT · 10-18 · gratis sotto i 7 anni',
+    kids:'🦀 <b>Granchietti ciechi:</b> nel laghetto sotterraneo vivono minuscoli granchi bianchi e ciechi, lunghi un centimetro, che esistono solo qui. Si vedono come puntini bianchi sul fondo. Niente monete in acqua: li uccidono.',
+    arch:'<p><span class="k">Abitare un tubo di lava.</span> I <i>jameos</i> sono i punti in cui la volta di un tunnel di lava è crollata, aprendolo verso il cielo. Manrique, dal 1966, ne ha fatto una sequenza di spazi: si scende nel Jameo Chico, si attraversa il lago sotterraneo su un sentiero, e si risale nel Jameo Grande, con la piscina bianca e turchese e il giardino tropicale.</p><p><span class="k">Il minimo intervento.</span> Muri bassi in pietra lavica, intonaco bianco, piante: il progetto aggiunge pochissimo e lavora sulla luce che cade dai crolli. Nel tunnel c’è anche un auditorium, ricavato nella cavità naturale.</p>',
+    desc:'La prima grande opera di Manrique a Lanzarote: un tunnel di lava trasformato in un luogo da attraversare a piedi, tra grotta, lago sotterraneo e giardino. Ci sono scale: il passeggino non serve. All’interno c’è anche un bar.',cid:''},
+   {name:'Cueva de los Verdes · OPZIONALE',q:'Cueva de los Verdes',wiki:['Cueva_de_los_Verdes'],lat:29.1570,lng:-13.4395,track:'arancio',n:2,time:'11:15 · visita guidata',meta:'CACT · solo online con orario · gratis sotto i 7 anni',
+    desc:'Un tratto dello stesso sistema di tunnel di lava dei Jameos, visitabile con guida. Luci basse, passaggi stretti e un effetto finale che la guida chiede di non svelare. I biglietti si comprano solo online, per giorno e ora.',cid:''},
+   {name:'★ Mirador del Río',q:'Mirador del Río',wiki:['Mirador_del_Río'],lat:29.2140,lng:-13.4810,track:'blu',n:3,time:'12:00 · 45 min',meta:'CACT · gratis sotto i 7 anni',
+    arch:'<p><span class="k">Un edificio che non si vede.</span> Manrique, 1973, sul ciglio del Risco de Famara, a circa 475 metri sul mare, dove c’era una vecchia batteria d’artiglieria. Da fuori è quasi solo un muro di pietra a secco sepolto nella montagna. Dentro, uno spazio bianco con pareti curve e due grandi vetrate che inquadrano La Graciosa e l’arcipelago Chinijo.</p><p><span class="k">Da guardare.</span> Il percorso d’ingresso, un corridoio stretto e chiuso che si apre di colpo sulla vista: compressione e rilascio, come in un’architettura sacra.</p>',
+    desc:'Il belvedere più spettacolare dell’isola: dalla vetrata si vede tutta l’isola di <b>La Graciosa</b>, con le sue spiagge e i suoi vulcani, il braccio di mare del Río e le saline sotto la scogliera. Bar con vista all’interno. Fuori tira molto vento: felpa per tutti.',cid:''},
+   {name:'Haría',q:'Haría Lanzarote',wiki:['Haría'],lat:29.1450,lng:-13.4995,track:'blu',n:4,time:'13:00 · pranzo',meta:'Paese · pranzo · Casa-Museo Manrique',
+    tip:'La Casa-Museo di Manrique è qui: biglietto combinato con la Fondazione di Tahíche (domenica).',
+    desc:'La “valle delle mille palme”, il paese più verde dell’isola, con case bianche e piazze ombreggiate. Qui Manrique ha passato gli ultimi anni: la sua <b>Casa-Museo</b> ha ancora lo studio com’era. Se la volete vedere, il biglietto combinato con la Fondazione di Tahíche, che è nel programma di domenica, costa meno.',cid:''},
+   {name:'★ Jardín de Cactus',q:'Jardín de Cactus Guatiza',wiki:['Jardín_de_Cactus','Cactus_Garden_(Lanzarote)'],lat:29.0805,lng:-13.4755,track:'blu',n:5,time:'15:00 · 1 ora',meta:'CACT · 10-17, ultimo ingresso 16:30 · gratis sotto i 7 anni',
+    kids:'🌵 <b>Per le gemelle:</b> cactus alti come alberi, palle spinose giganti e un mulino a vento in cima: si sale per vederlo da vicino.',
+    arch:'<p><span class="k">Un giardino in una cava.</span> 1990, l’ultima grande opera di Manrique a Lanzarote. Il giardino è dentro una vecchia cava di <i>picón</i>, la ghiaia vulcanica usata in agricoltura: le pareti della cava diventano un anfiteatro a terrazze, con muri di pietra lavica e migliaia di cactus disposti come un pubblico.</p><p><span class="k">Da guardare.</span> I dettagli: le maniglie, i bagni, il cancello d’ingresso con il cactus in metallo. Manrique disegnava tutto, fino all’ultimo oggetto.</p>',
+    desc:'Migliaia di cactus di centinaia di specie, da tutti i continenti, dentro un anfiteatro di pietra lavica. Si gira in un’ora. In cima c’è un mulino a vento restaurato, che macinava il gofio. Ultimo ingresso alle 16:30, quindi è l’ultima tappa.',cid:''}]},
+
+ {id:'6/12 · Mercato di Teguise e Fondazione Manrique',theme:'Mercato e la casa di Manrique',sun:['07:35','17:58'],
+  transport:'In auto: circa 40 minuti fino a Teguise. Parcheggio: arrivate entro le 9:30, dopo le 10:30 si riempie tutto. Poi 15 minuti fino a Tahíche e circa 35 per il rientro.',food:'Pranzo a Teguise',
+  eat:'Pranzo a <b>Teguise</b>, tra i banchi del mercato o in uno dei locali della piazza. Cena in hotel.',flex:'LagOmar opzionale',
+  note:'Il mercato più grande dell’isola, ogni domenica nel centro storico di Teguise, e nel pomeriggio la casa di Manrique. <b>Il 6 dicembre è festa in Spagna</b> (Giorno della Costituzione): mercato e Fondazione sono aperti, ma alcuni negozi possono essere chiusi.',
+  legs:[{m:'car',a:'H',b:'blu1',t:'~40 min. Partenza verso le 8:50 per trovare parcheggio.'},{m:'car',a:'blu1',b:'blu2',t:'~15 min verso Tahíche.'},{m:'car',a:'blu2',b:'arancio3',t:'5 min, solo se si fa LagOmar.'},{m:'car',a:'blu2',b:'H',t:'~35 min fino a Playa Blanca.'}],
+  pts:[stay(HOTEL,MEMO),
+   {name:'Mercato della domenica di Teguise',q:'Teguise Lanzarote',wiki:['Teguise'],lat:29.0605,lng:-13.5640,track:'blu',n:1,time:'09:30 → 13:00',meta:'Domenica 9-14 · parcheggio circa 2 €',
+    arch:'<p><span class="k">L’antica capitale.</span> Teguise è stata la capitale dell’isola fino a metà Ottocento, quando il ruolo passò ad Arrecife, sul porto. Il centro conserva piazze, chiese e case basse con cortili e balconi in legno.</p>',
+    desc:'Centinaia di banchi nelle piazze e nelle vie del centro storico: artigianato, vestiti, prodotti locali, formaggi, mojo, musica dal vivo. Con le bambine conviene un giro solo, all’inizio, quando c’è meno gente. Il centro storico, con le case bianche e le chiese, vale anche da solo.',cid:''},
+   {name:'★ Fundación César Manrique',q:'Fundación César Manrique Tahíche',wiki:['César_Manrique_Foundation','Fundación_César_Manrique'],lat:29.0310,lng:-13.5470,track:'blu',n:2,time:'14:30 · 1 ora e mezza',meta:'Tutti i giorni 10-17:30 · biglietteria fino alle 17:00 · 10 €',
+    kids:'🫧 <b>Le stanze-bolla:</b> sotto la casa ci sono cinque bolle vulcaniche trasformate in stanze, collegate da tunnel. In una c’è un albero che esce dal tetto. Per le bambine è una casa delle fiabe.',
+    arch:'<p><span class="k">Una casa su una colata di lava.</span> Manrique la costruisce a partire dal 1968 sopra la lava delle eruzioni del 1730-36. Il livello superiore riprende l’architettura tradizionale di Lanzarote, con volumi bianchi e infissi verdi, ma con grandi vetrate aperte sulla lava. Sotto, cinque bolle vulcaniche diventano stanze: soggiorni, una piscina, un giardino, collegati da passaggi scavati nella roccia.</p><p><span class="k">Il manifesto.</span> È la sintesi di tutto il suo lavoro: integrare architettura e paesaggio invece di imporre l’una all’altro. Dal 1992 è sede della Fondazione, con la sua collezione e opere di artisti amici come Picasso e Miró.</p><p><span class="k">Da guardare.</span> Il soggiorno superiore, dove una colata di lava entra dalla vetrata dentro la casa.</p>',
+    desc:'La casa-studio di César Manrique, oggi sede della sua Fondazione: per un architetto è la tappa principale del viaggio. Aperta tutti i giorni, festivi compresi. Biglietto combinato con la Casa-Museo di Haría: 17 €.',cid:''},
+   {name:'LagOmar · OPZIONALE',q:'LagOmar Nazaret Lanzarote',wiki:['LagOmar'],lat:29.0435,lng:-13.5605,track:'arancio',n:3,time:'16:15 · 45 min',meta:'Casa-museo · orari da verificare',
+    arch:'<p><span class="k">Scavata in una cava.</span> Una casa di Manrique e Jesús Soto ricavata nelle pareti di una vecchia cava, con piscine, terrazze e passaggi tra roccia e intonaco bianco. È legata alla leggenda di Omar Sharif, che l’avrebbe vinta e persa a carte nella stessa notte.</p>',
+    desc:'Un’altra casa nella roccia, più piccola e più fiabesca della Fondazione, a Nazaret, vicino a Teguise. Solo se resta tempo ed energia: controllate gli orari prima di andarci.',cid:''}]},
+
+ {id:'7/12 · Animali, sottomarino e La Geria',theme:'Giornata per le bambine',sun:['07:36','17:58'],
+  transport:'In auto: circa 30 minuti fino a Puerto del Carmen (Rancho Texas) o 20 fino a Puerto Calero (sottomarino). La Geria è sulla strada del ritorno, sulla LZ-30.',food:'Pranzo nel parco o a Puerto Calero',
+  eat:'Pranzo dentro <b>Rancho Texas</b> o al porto di <b>Puerto Calero</b>, a seconda della scelta. Cena in hotel.',flex:'Scegliete una delle due attività',
+  note:'La giornata pensata per le bambine: <b>scegliete una delle due</b>, il parco animali o il sottomarino, poi nel pomeriggio un giro tra le vigne di La Geria. <span class="warn">Il 7 dicembre:</span> le fonti non sono d’accordo se in Canarie sia festivo, per il ponte della Costituzione. Se lo è, la bodega El Grifo potrebbe essere chiusa: controllate.',
+  legs:[{m:'car',a:'H',b:'blu1',t:'~30 min verso Puerto del Carmen.'},{m:'car',a:'H',b:'verde2',t:'~20 min, in alternativa a Rancho Texas.'},{m:'car',a:'blu1',b:'blu3',t:'~20 min verso l’interno, sulla LZ-30.'},{m:'car',a:'blu3',b:'H',t:'~30 min attraverso La Geria e Yaiza.'}],
+  pts:[stay(HOTEL,MEMO),
+   {name:'Rancho Texas Lanzarote Park',q:'Rancho Texas Lanzarote Park',wiki:['Rancho_Texas_Lanzarote_Park','Puerto_del_Carmen'],lat:28.9325,lng:-13.6535,track:'blu',n:1,time:'10:00 → 14:00',meta:'Parco animali · 9:30-17:30 tutto l’anno',
+    tip:'Prezzi 2026 riportati dai rivenditori: circa 30 € adulti, 22 € bambini 3-12. Online di solito costa meno.',
+    kids:'🦁 <b>Per le gemelle:</b> spettacoli con leoni marini, pappagalli e rapaci, e un villaggio del far west. Guardate gli orari degli spettacoli all’ingresso e costruite il giro attorno a quelli.',
+    desc:'Il parco a tema far west di Puerto del Carmen: animali, spettacoli e ristoranti. È la giornata “per loro”, e va bene così.',cid:''},
+   {name:'Submarine Safaris · ALTERNATIVA',q:'Submarine Safaris Puerto Calero',wiki:['Puerto_Calero'],lat:28.9165,lng:-13.7040,track:'verde',n:2,time:'in alternativa · 1 ora',meta:'Puerto Calero · dai 2 anni · da prenotare',
+    tip:'Prezzi indicativi: 59 € adulti, 39 € bambini 2-14.',
+    kids:'🐠 <b>Un vero sottomarino</b> giallo che scende a circa 30 metri: dagli oblò si vedono pesci, razze e un relitto.',
+    desc:'Un’ora sott’acqua, seduti, con gli oblò davanti: per bambini di 5 anni è un’avventura senza fatica. Si prenota online e si parte dal porto turistico di Puerto Calero.',cid:''},
+   {name:'La Geria e Bodega El Grifo',q:'Bodegas El Grifo Lanzarote',wiki:['La_Geria'],lat:28.9853,lng:-13.6694,track:'blu',n:3,time:'15:00 · 1 ora',meta:'Museo del vino · lun-ven 10-17:15',
+    arch:'<p><span class="k">Un paesaggio agricolo disegnato a mano.</span> A La Geria ogni vite cresce in una buca scavata nella cenere vulcanica (<i>hoyo</i>), protetta dal vento da un muretto di pietra a mezzaluna (<i>zoco</i>). Lo strato di lapillo trattiene l’umidità della notte: un sistema agricolo nato dopo le eruzioni del Settecento, che è uno dei paesaggi più fotografati dell’isola.</p>',
+    desc:'La strada LZ-30 attraversa La Geria, la valle delle vigne nella cenere nera. <b>El Grifo</b>, fondata nel 1775, è una delle cantine più antiche delle Canarie, con un museo del vino in vecchi locali in pietra lavica. Per gli adulti, un assaggio di malvasía volcánica; per le bambine, le vecchie botti e i torchi.',cid:''}]},
+
+ {id:'8/12 · Giornata libera · Fuerteventura o Lanzarote',theme:'Giornata libera',sun:['07:36','17:58'],
+  transport:'<b>Fuerteventura:</b> traghetto dal porto di Playa Blanca a Corralejo, 25-35 minuti, Fred. Olsen o Naviera Armas. Fred. Olsen fa il 50% ai bambini dai 4 agli 11 anni. <b>Lanzarote:</b> tutto a pochi minuti dall’hotel.',food:'Pranzo a Corralejo o in hotel',
+  eat:'A Corralejo, ristoranti e bar lungo il porto. Cena in hotel.',flex:'Scegliete voi il giorno stesso',
+  note:'L’<b>8 dicembre è festa in tutta la Spagna</b> (Immacolata). Due possibilità, da decidere guardando il vento:<br><br><b>Arancio · Fuerteventura in giornata.</b> Traghetto per Corralejo, le grandi dune di sabbia bianca del parco naturale, il paese sul mare. Meglio senza auto: CICAR potrebbe non permettere di portarla sull’altra isola, chiedete prima. A Corralejo ci sono taxi e bus per le dune.<br><br><b>Verde · restare a Lanzarote.</b> Mattina in piscina, nel pomeriggio la salita facile alla Montaña Roja e il tramonto al faro di Pechiguera.',
+  legs:[{m:'walk',a:'H',b:'arancio1',t:'Pochi minuti in auto o taxi fino al porto.'},{m:'ferry',a:'arancio1',b:'arancio2',t:'25-35 min. Partenze frequenti, orari su fredolsen.es e navieraarmas.com.'},{m:'car',a:'arancio2',b:'arancio3',t:'~10 min in taxi verso sud.'},{m:'car',a:'H',b:'verde4',t:'~10 min fino all’attacco del sentiero.'},{m:'car',a:'verde4',b:'verde5',t:'~10 min verso la punta ovest.'}],
+  pts:[stay(HOTEL,MEMO),
+   {name:'Porto di Playa Blanca',q:'Puerto de Playa Blanca',wiki:['Playa_Blanca','Playa_Blanca,_Lanzarote'],lat:28.8615,lng:-13.8305,track:'arancio',n:1,time:'09:30 · traghetto',meta:'Fred. Olsen · Naviera Armas',
+    desc:'Il porto da cui partono i traghetti per Fuerteventura. I biglietti si comprano online o in biglietteria. Con tempo buono la traversata è breve e tranquilla; con vento forte il mare si alza.',cid:''},
+   {name:'Corralejo (Fuerteventura)',q:'Corralejo Fuerteventura',wiki:['Corralejo'],lat:28.7398,lng:-13.8640,track:'arancio',n:2,time:'10:15',meta:'Fuerteventura · paese e porto',
+    desc:'Il paese di pescatori all’estremità nord di Fuerteventura, diventato località turistica: lungomare, piazzette, ristoranti di pesce. Davanti c’è l’isolotto di Lobos.',cid:''},
+   {name:'Dune di Corralejo',q:'Parque Natural de Corralejo',wiki:['Corralejo_Natural_Park','Corralejo'],lat:28.6830,lng:-13.8370,track:'arancio',n:3,time:'11:00 → 15:00',meta:'Parco naturale · gratis',
+    kids:'🏜️ <b>Un deserto vero:</b> dune di sabbia bianca alte come case, da salire e da cui rotolare giù. Sul lato del mare, spiagge lunghissime.',
+    desc:'Chilometri di dune di sabbia bianca e chiara che arrivano fino al mare turchese. Ci si ferma lungo la strada che attraversa il parco e si cammina tra le dune. Niente ombra: acqua, cappellini e crema.',cid:''},
+   {name:'Montaña Roja · ALTERNATIVA',q:'Montaña Roja Playa Blanca',wiki:['Montaña_Roja','Playa_Blanca,_Lanzarote'],lat:28.8695,lng:-13.8505,track:'verde',n:4,time:'16:00 · 1 ora',meta:'Sentiero facile · gratis',
+    desc:'Il vulcano rosso sopra Playa Blanca: un sentiero largo sale in circa mezz’ora fino al bordo del cratere, con vista su tutta la costa e su Fuerteventura. Fattibile con bambine di 5 anni con calma e scarpe chiuse. Scendete prima del buio.',cid:''},
+   {name:'Faro di Pechiguera · ALTERNATIVA',q:'Faro de Pechiguera',wiki:['Faro_de_Pechiguera','Playa_Blanca,_Lanzarote'],lat:28.8530,lng:-13.8735,track:'verde',n:5,time:'17:30 · tramonto',meta:'Gratis',
+    desc:'Il faro all’estremità sud-ovest dell’isola, alla fine del lungomare di Playa Blanca: il posto più bello del paese per il tramonto, verso le 18.',cid:''}]},
+
+ {id:'9/12 · Mercato di Marina Rubicón e partenza',theme:'Partenza',sun:['07:37','17:59'],
+  transport:'Circa 35 minuti in auto fino all’aeroporto. <span class="warn">Riconsegna auto da spostare verso le 14:00.</span>',food:'Pranzo in aeroporto',
+  sched:[['09:00 → 10:30','Mercato di Marina Rubicón (mercoledì 9-14)'],['entro le 11:00','Check-out dal Gran Tagoro'],['~13:15','Partenza per l’aeroporto'],['~14:00','Riconsegna auto CICAR al Terminal 1'],['14:15','Check-in bagaglio · pranzo dopo i controlli'],['16:35 → 21:30','Volo <b>FR9462</b> Lanzarote → Milano Malpensa']],
+  eat:'Pranzo in aeroporto dopo i controlli.',flex:'Mattina libera',
+  note:'Ultima mattina. Il mercoledì c’è il <b>mercato di Marina Rubicón</b>, a pochi minuti dall’hotel: artigianato e prodotti locali sul porto turistico. Poi check-out entro le 11 e qualche ora tranquilla prima dell’aeroporto.<br><br><span class="warn">Auto:</span> la prenotazione dice riconsegna alle 16:00, ma il volo parte alle 16:35 e Ryanair chiude la consegna bagagli 40 minuti prima. Spostatela verso le 14:00 dall’app CICAR o al +34 928 822 900.<br><br><b>Carte d’imbarco:</b> Ryanair non accetta più quelle stampate, solo quelle nell’app. Fate il check-in online per tutti e quattro.',
+  legs:[{m:'walk',a:'H',b:'blu1',t:'Pochi minuti a piedi lungo il mare.'},{m:'car',a:'H',b:'blu2',t:'~35 min sulla LZ-2. Partenza verso le 13:15.'}],
+  pts:[stay(HOTEL,'<b>Gran Tagoro.</b> <span class="warn">Check-out entro le 11:00.</span>'),
+   {name:'Mercato di Marina Rubicón',q:'Marina Rubicón Playa Blanca',wiki:['Marina_Rubicón','Playa_Blanca,_Lanzarote'],lat:28.8590,lng:-13.8150,track:'blu',n:1,time:'09:00 · 1 ora e mezza',meta:'Mercoledì e sabato 9-14 · parcheggio sotterraneo',
+    desc:'Il porto turistico di Playa Blanca, con barche, negozi e ristoranti. Il mercoledì e il sabato si riempie di banchi: artigianato, gioielli, prodotti canari. Il parcheggio sotterraneo ha 45 minuti gratis, ma dall’hotel ci si arriva anche a piedi.',cid:''},
+   {name:'Aeroporto di Lanzarote (ACE)',q:'Aeropuerto de Lanzarote',wiki:['Lanzarote_Airport','César_Manrique-Lanzarote_Airport'],lat:28.9455,lng:-13.6052,track:'blu',n:2,time:'14:00 · auto · 16:35 volo',meta:'Riconsegna CICAR al Terminal 1',
+    desc:'Riconsegna dell’auto al Terminal 1, poi check-in del bagaglio da stiva e controlli. Il volo FR9462 parte alle 16:35 e atterra a Malpensa alle 21:30, ora italiana.',cid:''}]}
+];
+
+const CHECK=[
+ {title:'Da sistemare subito',items:[
+  {id:'auto',text:'Spostare la riconsegna dell’auto CICAR verso le 14:00 del 9/12',small:'Ora è alle 16:00, ma il volo parte alle 16:35 e la consegna bagagli chiude alle 15:55. App CICAR o +34 928 822 900.'}]},
+ {title:'Documenti',items:[
+  {id:'doc',text:'Carta d’identità o passaporto valido per tutti e quattro',small:'Servono per il volo e al check-in in hotel, anche per le bambine.'},
+  {id:'checkin',text:'Check-in online Ryanair per tutti',small:'Le carte d’imbarco si usano solo dall’app Ryanair: quelle stampate non sono più accettate.'}]},
+ {title:'Prenotazioni',items:[
+  {id:'hotel',text:'Gran Tagoro, 2-9 dicembre, 7 notti, mezza pensione',small:'Fatto. Si paga all’arrivo, con la carta di chi alloggia.'},
+  {id:'car',text:'Auto CICAR con 2 seggiolini',small:'Fatto. Ritiro il 2/12 al Terminal 1.'},
+  {id:'timanfaya',text:'Timanfaya, giovedì 3 alle 10:30',small:'Solo online, con giorno e orario: non c’è biglietteria. Gratis sotto i 7 anni.'},
+  {id:'verdes',text:'Cueva de los Verdes, sabato 5 (se la fate)',small:'Solo online, con orario.'},
+  {id:'giorno7',text:'Rancho Texas oppure Submarine Safaris, lunedì 7',small:'Online costa meno.'},
+  {id:'ferry',text:'Traghetto per Corralejo, martedì 8 (se andate)',small:'Fred. Olsen o Naviera Armas. Chiedete a CICAR prima di portare l’auto.'}]},
+ {title:'Da sapere',items:[
+  {id:'bagagli',text:'Un solo bagaglio da stiva, quello di Vincenzo',small:'Gli altri hanno solo la borsa piccola sotto il sedile. Liquidi e souvenir vanno in stiva.'},
+  {id:'ora',text:'A Lanzarote è un’ora indietro rispetto all’Italia',small:'Tutti gli orari del sito sono ora locale.'},
+  {id:'sole',text:'Crema solare alta e cappellini',small:'Anche a dicembre il sole delle Canarie scotta.'},
+  {id:'feste',text:'6 e 8 dicembre festivi in Spagna',small:'I centri turistici sono aperti, alcuni negozi no.'},
+  {id:'papagayo',text:'Una carta in tasca per il parcheggio di Papagayo',small:'3 €, solo pagamento elettronico.'}]}
+];
+
+const map=L.map('map',{scrollWheelZoom:true}).setView([28.96,-13.65],10);
+/* Sfondo OpenStreetMap (CARTO ora chiede una chiave). Il tema scuro è un filtro CSS sulle tessere. */
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:19}).addTo(map);
+function setTiles(dark){}
+/* Overlay opzionale con la rete di trasporto pubblico (dati OpenStreetMap). */
+const PT_TILES='https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png';
+let ptLayer=null;
+document.getElementById('ptnet').addEventListener('change',e=>{
+  if(e.target.checked){
+    ptLayer=L.tileLayer(PT_TILES,{maxZoom:18,opacity:.85,
+      attribution:'Mezzi: &copy; <a href="https://memomaps.de/">MeMoMaps</a> (CC-BY-SA)'}).addTo(map);
+  }else if(ptLayer){map.removeLayer(ptLayer);ptLayer=null;}
+});
+
+let layer=L.layerGroup().addTo(map);
+let markers=[];
+
+/* Tratte fra una tappa e l'altra. Gli estremi sono sempre punti già presenti
+   nell'itinerario ('H'/'H2' = alloggio, '<track><n>' = tappa), quindi il
+   tracciato è schematico: dice con che mezzo ci si sposta, non che strada fa. */
+const MODE={
+  walk   :{ic:'🚶',dash:'1 7' ,w:2.5,op:.5 ,nm:'A piedi'},
+  tram   :{ic:'🚋',dash:null  ,w:4  ,op:.75,nm:'Tram'},
+  bus    :{ic:'🚌',dash:null  ,w:4  ,op:.75,nm:'Bus'},
+  bybanen:{ic:'🚈',dash:null  ,w:4  ,op:.75,nm:'Bybanen'},
+  rail   :{ic:'🚆',dash:null  ,w:4  ,op:.75,nm:'Treno'},
+  ferry  :{ic:'⛴',dash:'10 6',w:3  ,op:.75,nm:'Traghetto'},
+  taxi   :{ic:'🚕',dash:'4 6' ,w:3  ,op:.7 ,nm:'Taxi'},
+  car    :{ic:'🚗',dash:null  ,w:4  ,op:.7 ,nm:'Auto'}
+};
+function legPt(d,ref){
+  if(ref==='H'||ref==='H2'){
+    const hs=d.pts.filter(p=>p.track==='hotel');
+    return ref==='H'?hs[0]:hs[1];
+  }
+  const m=/^([a-z]+)(\d+)$/.exec(ref);
+  return m?d.pts.find(x=>x.track===m[1]&&String(x.n)===m[2]):null;
+}
+function legTrack(d,g){
+  const b=legPt(d,g.b),a=legPt(d,g.a);
+  const t=(b&&b.track!=='hotel')?b.track:(a?a.track:'blu');
+  return t==='hotel'?'blu':t;
+}
+function shortName(p){
+  if(!p)return '?';
+  return p.name.replace(/^★\s*/,'')
+    .split(' (')[0].split(' — ')[0].split(' · ')[0].trim();
+}
+function midOf(path){
+  if(path.length%2===1)return path[(path.length-1)/2];
+  const a=path[path.length/2-1],b=path[path.length/2];
+  return [(a[0]+b[0])/2,(a[1]+b[1])/2];
+}
+
+function colOf(track){return track==='hotel'?C.viola:(track==='verde'?C.verde:(track==='arancio'?C.arancio:C.blu));}
+function icon(track,label){
+  const txt=track==='hotel'?'★':label;
+  return L.divIcon({html:`<div class="numicon" style="background:${colOf(track)}">${txt}</div>`,className:'',iconSize:[26,26],iconAnchor:[13,13]});
+}
+
+function eatLinks(html){
+  // ogni <b>Nome</b> diventa una ricerca su Google Maps (Nome + città)
+  const area=CITY;
+  return html.replace(/<b>(.*?)<\/b>/g,(m,name)=>{
+    const q=encodeURIComponent(name+' '+area);
+    return `<a class="eatlink" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener"><b>${name}</b> ↗</a>`;
+  });
+}
+
+function draw(idx){
+  layer.clearLayers(); markers=[];
+  const d=DAYS[idx];
+  const hotel=d.pts.find(p=>p.track==='hotel');
+  if(d.legs&&d.legs.length){
+    // una polilinea per tratta, con lo stile del mezzo e un badge a metà strada
+    d.legs.forEach(g=>{
+      const A=legPt(d,g.a),B=legPt(d,g.b); if(!A||!B)return;
+      const mo=MODE[g.m]||MODE.walk, col=colOf(legTrack(d,g));
+      const path=[[A.lat,A.lng],...(g.via||[]),[B.lat,B.lng]];
+      L.polyline(path,{color:col,weight:mo.w,opacity:mo.op,dashArray:mo.dash})
+        .bindTooltip(`${mo.ic} ${mo.nm}${g.l?' '+g.l:''} · ${shortName(A)} → ${shortName(B)}`,{sticky:true})
+        .addTo(layer);
+      if(g.m!=='walk'){
+        L.marker(midOf(path),{interactive:false,keyboard:false,zIndexOffset:-100,
+          icon:L.divIcon({className:'',iconSize:[0,0],
+            html:`<div class="legbadge">${mo.ic}${g.l?' '+g.l:''}</div>`})}).addTo(layer);
+      }
+    });
+  }else{
+    // fallback: giro semplice alloggio → tappe → alloggio, per track
+    const tracks={};
+    d.pts.forEach(p=>{if(p.track==='hotel')return;(tracks[p.track]=tracks[p.track]||[]).push([p.lat,p.lng]);});
+    Object.entries(tracks).forEach(([t,coords])=>{
+      const col=colOf(t); let seq=coords.slice();
+      if(hotel){seq=[[hotel.lat,hotel.lng],...seq,[hotel.lat,hotel.lng]];}
+      if(seq.length<2)return;
+      L.polyline(seq,{color:col,weight:3.5,opacity:.7,dashArray:t==='blu'?null:'6 6'}).addTo(layer);
+    });
+  }
+  const bounds=[];
+  d.pts.forEach((p,i)=>{
+    const m=L.marker([p.lat,p.lng],{icon:icon(p.track,p.n||'')}).addTo(layer);
+    m.bindPopup(`<h4>${p.name}</h4><div class="pm">${p.meta||''}</div>${p.tip||''}`);
+    markers[i]=m; bounds.push([p.lat,p.lng]);
+  });
+  if(bounds.length===1)map.setView(bounds[0],14);
+  else if(bounds.length>1)map.fitBounds(bounds,{padding:[60,60]});
+  renderPanel(idx);
+}
+
+function renderPanel(idx){
+  const d=DAYS[idx]; const panel=document.getElementById('panel');
+  let html=`<div class="daynote">${d.note}</div>`;
+  html+=`<div class="daybar">
+    ${d.sun?sunRow(d):''}
+    <div class="row"><span class="ico">🚆</span><span class="k">Mezzi</span><span class="v">${d.transport||'-'}</span></div>
+    <div class="row"><span class="ico">🍴</span><span class="k">Cibo</span><span class="v">${d.food||'-'}</span></div>
+    ${d.eat?`<div class="row"><span class="ico">🍽️</span><span class="k">Ristoranti</span><span class="v">${eatLinks(d.eat)}</span></div>`:''}
+    ${d.sweet?`<div class="row"><span class="ico">🍰</span><span class="k">Golosità</span><span class="v">${eatLinks(d.sweet)}</span></div>`:''}
+    <div class="row"><span class="ico">↔</span><span class="k">Flessibilità</span><span class="v">${d.flex||'-'}</span></div>
+  </div>`;
+  if(d.legs&&d.legs.length){
+    html+=`<div class="daybar"><div class="row"><span class="ico">🚏</span><span class="k">Tratte</span>
+      <span class="v schem">tracciato schematico</span></div>
+      <div class="legs">${d.legs.map(g=>{
+        const A=legPt(d,g.a),B=legPt(d,g.b); if(!A||!B)return '';
+        const mo=MODE[g.m]||MODE.walk;
+        return `<div class="leg"><span class="lg-ic">${mo.ic}</span><span class="lg-tx">
+          <b>${shortName(A)} → ${shortName(B)}</b>${g.l?`<span class="lg-ln">${mo.nm} ${g.l}</span>`:''}
+          <br>${g.t||''}</span></div>`;
+      }).join('')}</div></div>`;
+  }
+  if(d.sched&&d.sched.length){
+    html+=`<div class="daybar"><div class="row"><span class="ico">🕑</span><span class="k">Orari</span></div>
+      <table class="sched">${d.sched.map(([h,x])=>`<tr><td class="h">${h}</td><td>${x}</td></tr>`).join('')}</table></div>`;
+  }
+  if(d.tickets&&d.tickets.length){
+    html+=`<div class="daybar"><div class="row"><span class="ico">🎫</span><span class="k">Biglietti</span></div>
+      <div class="tickets">${d.tickets.map(([ic,lbl,href])=>
+        `<a class="ticket" href="${href}" target="_blank" rel="noopener">${ic} ${lbl} ↗</a>`).join('')}</div></div>`;
+  }
+  d.pts.forEach((p,i)=>{
+    const maps=`<a class="maps" href="https://www.google.com/maps/search/?api=1&query=${p.q?encodeURIComponent(p.q):p.lat+','+p.lng}" target="_blank" rel="noopener">Apri in Google Maps ↗</a>`;
+    const badge=p.track==='hotel'?'★':(p.n||'');
+    const photo=p.wiki&&p.wiki.length?`<div class="ph" data-wiki="${p.wiki.join('|')}" data-cap="${p.wikiCap||''}" hidden></div>`:'';
+    html+=`<div class="stop" data-i="${i}">
+      <div class="badge" style="background:${colOf(p.track)}">${badge}</div>
+      <div class="body">
+        ${p.time?`<span class="time">${p.time}</span><br>`:''}
+        <div class="nm">${p.name}</div>
+        ${p.meta?`<div class="meta">${p.meta}</div>`:''}
+        ${photo}
+        ${p.tip?`<div class="tip">${p.tip}</div>`:''}
+        ${p.kids?`<div class="frozen">${p.kids}</div>`:''}
+        ${p.desc?`<div class="desc" data-tappa="${(d.id+' · '+p.name).replace(/"/g,'&quot;')}">${p.desc}</div>`:''}
+        ${p.arch?`<details class="arch"><summary>🏛 Approfondimento architettonico</summary><div class="arch-body">${p.arch}</div></details>`:''}
+        ${maps}
+      </div></div>`;
+  });
+  panel.innerHTML=html; panel.scrollTop=0;
+  loadPhotos(panel);
+  panel.querySelectorAll('.stop').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const i=+el.dataset.i; const p=DAYS[idx].pts[i];
+      map.setView([p.lat,p.lng],16); markers[i].openPopup();
+      panel.querySelectorAll('.stop').forEach(s=>s.classList.remove('active'));
+      el.classList.add('active');
+      if(window.innerWidth<=760){window.scrollTo({top:0,behavior:'smooth'});}
+    });
+  });
+}
+
+function buildTable(){
+  const tv=document.getElementById('tableview');
+  let rows=`<table id="tabletbl"><thead><tr>
+    <th>Data</th><th>Tema</th><th>Tappe principali</th><th>Mezzi</th><th>Cibo</th><th>Flessibilità</th></tr></thead><tbody>`;
+  rows+=`<tr class="cityband"><td colspan="6">LANZAROTE · 2-9 dicembre 2026</td></tr>`;
+  DAYS.forEach(d=>{
+    const date=d.id.split(' · ')[0];
+    const stops=d.pts.filter(p=>p.track!=='hotel').map(p=>p.name).join(' · ')||'-';
+    rows+=`<tr>
+      <td class="date">${date}</td>
+      <td>${d.theme||''}</td>
+      <td>${stops}</td>
+      <td>${d.transport||'-'}</td>
+      <td>${d.food||'-'}</td>
+      <td>${d.flex||'-'}</td></tr>`;
+  });
+  rows+='</tbody></table>';
+  tv.innerHTML=rows;
+}
+
+function setView(v){
+  const isMap=v==='map';
+  document.getElementById('main').style.display=isMap?'flex':'none';
+  document.getElementById('tableview').style.display=v==='table'?'block':'none';
+  document.getElementById('checkview').style.display=v==='check'?'block':'none';
+  document.getElementById('gourmetview').style.display=v==='gourmet'?'block':'none';
+  document.getElementById('daynav').style.display=isMap?'':'none';
+  document.querySelector('.tgl').style.display=isMap?'':'none';
+  document.querySelector('.legend').style.display=isMap?'':'none';
+  document.getElementById('svcbtns').style.display=isMap?'inline-flex':'none';
+  document.getElementById('tab-map').classList.toggle('active',isMap);
+  document.getElementById('tab-table').classList.toggle('active',v==='table');
+  document.getElementById('tab-check').classList.toggle('active',v==='check');
+  document.getElementById('tab-gourmet').classList.toggle('active',v==='gourmet');
+  if(isMap)setTimeout(()=>map.invalidateSize(),50);
+  if(v==='check')buildCheck();
+  if(v==='gourmet')buildGourmet();
+}
+document.getElementById('tab-map').addEventListener('click',()=>setView('map'));
+document.getElementById('tab-table').addEventListener('click',()=>setView('table'));
+document.getElementById('tab-check').addEventListener('click',()=>setView('check'));
+document.getElementById('tab-gourmet').addEventListener('click',()=>setView('gourmet'));
+buildTable();
+
+
+/* Luce del giorno: barra 8-20 con la finestra di sole e i pallini delle tappe a orario. */
+function toMin(h){const m=/(\d{1,2}):(\d{2})/.exec(h||'');return m?(+m[1])*60+(+m[2]):null;}
+function pct(m){return Math.max(0,Math.min(100,(m-480)/720*100));}
+function sunRow(d){
+  const a=toMin(d.sun[0]),b=toMin(d.sun[1]);
+  const ticks=d.pts.map(p=>toMin(p.time)).filter(m=>m!==null)
+    .map(m=>`<i class="tk" style="left:${pct(m).toFixed(1)}%"></i>`).join('');
+  return `<div class="row"><span class="ico">☀️</span><span class="k">Luce</span><span class="v" style="flex:1">
+    dalle ${d.sun[0].replace(/^0/,'')} alle ${d.sun[1]}
+    <div class="sunbar"><span class="sun" style="left:${pct(a).toFixed(1)}%;width:${(pct(b)-pct(a)).toFixed(1)}%"></span>${ticks}</div>
+    <div class="sunscale"><span>8</span><span>12</span><span>16</span><span>20</span></div></span></div>`;
+}
+
+/* Foto delle tappe: prese da Wikipedia al volo, niente file da caricare.
+   Per ogni tappa si provano i titoli in ordine; se nessuno ha un'immagine il riquadro resta nascosto. */
+const PHOTO_CACHE={};
+async function wikiPhoto(titles){
+  const key=titles.join('|');
+  if(key in PHOTO_CACHE)return PHOTO_CACHE[key];
+  PHOTO_CACHE[key]=(async()=>{
+    for(const t of titles){
+      try{
+        const r=await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+t);
+        if(!r.ok)continue;
+        const j=await r.json();
+        const th=j.thumbnail&&j.thumbnail.source, orig=j.originalimage;
+        // l'originale solo come riserva e solo se non è enorme
+        const alt=orig&&orig.width&&orig.width<=2000?orig.source:'';
+        if(th||alt)return {src:th||alt,alt:th?alt:'',page:(j.content_urls&&j.content_urls.desktop&&j.content_urls.desktop.page)||''};
+      }catch(e){}
+    }
+    return null;
+  })();
+  return PHOTO_CACHE[key];
+}
+function loadPhotos(root){
+  root.querySelectorAll('.ph[data-wiki]').forEach(async el=>{
+    const ph=await wikiPhoto(el.dataset.wiki.split('|'));
+    if(!ph||!el.isConnected)return;
+    const img=new Image();
+    img.className='stopimg'; img.decoding='async'; img.alt='';  // niente loading=lazy: il riquadro è nascosto finché l'immagine non arriva
+    img.onerror=()=>{ // se la miniatura non carica si prova l'originale, poi si rinuncia
+      if(img.dataset.retry||!ph.alt){el.remove();return;}
+      img.dataset.retry='1'; img.src=ph.alt;
+    };
+    img.onload=()=>{el.hidden=false;};
+    img.src=ph.src;
+    el.appendChild(img);
+    if(ph.page){const a=document.createElement('a');a.className='cr';a.href=ph.page;a.target='_blank';a.rel='noopener';a.textContent='Foto: Wikipedia';a.addEventListener('click',e=>e.stopPropagation());el.appendChild(a);}
+    if(el.dataset.cap){const c=document.createElement('div');c.className='cap';c.textContent=el.dataset.cap;el.appendChild(c);}
+  });
+}
+
+/* ===== CHECKLIST (spunte salvate su questo dispositivo) ===== */
+function ckLoad(){try{return JSON.parse(localStorage.getItem('lz26-check')||'{}');}catch(e){return {};}}
+function ckSave(o){try{localStorage.setItem('lz26-check',JSON.stringify(o));}catch(e){}}
+function buildCheck(){
+  const el=document.getElementById('checkview'); const st=ckLoad();
+  const all=CHECK.flatMap(g=>g.items), done=all.filter(i=>st[i.id]).length;
+  el.innerHTML=`<div class="ck"><h2>Prima di partire</h2>
+    <p class="sub">Documenti, prenotazioni e cose da sapere. Le spunte restano salvate su questo dispositivo · ${done} su ${all.length}</p>
+    <div class="ckbar"><i style="width:${(done/all.length*100).toFixed(0)}%"></i></div>
+    ${CHECK.map(g=>`<h3>${g.title}</h3>`+g.items.map(i=>`<label class="ckrow${st[i.id]?' done':''}">
+      <input type="checkbox" data-id="${i.id}"${st[i.id]?' checked':''}><span><span class="t">${i.text}</span><small>${i.small}</small></span></label>`).join('')).join('')}
+  </div>`;
+  el.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{
+    const s=ckLoad(); s[cb.dataset.id]=cb.checked; ckSave(s); buildCheck();
+  }));
+}
+
+/* ===== GOURMET (contenuto statico, nessuna chiamata di rete) ===== */
+function dish(n,p,d,w,cls,badge){
+  return `<div class="dish${cls?' '+cls:''}">
+    <div class="dn">${n}${badge||''}</div>
+    ${p?`<div class="dp">${p}</div>`:''}
+    <div class="dd">${d}</div>
+    ${w?`<div class="dw">${w}</div>`:''}
+  </div>`;
+}
+const B_TOP='<span class="must">da provare</span>';
+const B_SEA='<span class="must seas">di stagione a dicembre</span>';
+const B_KID='<span class="must seas">piace ai bambini</span>';
+
+function buildGourmet(){
+  const gv=document.getElementById('gourmetview');
+  if(gv.dataset.done)return;
+
+  const toc=[['pratica','Come funziona'],['salato','Piatti salati'],['isola','Prodotti dell’isola'],
+    ['dolci','Dolci'],['bere','Cosa bere'],['bimbi','Con le bambine'],['calendario','Calendario'],
+    ['souvenir','Da portare a casa']];
+
+  gv.innerHTML=`<div class="gm">
+  <h2>Gourmet</h2>
+  <p class="sub">Cosa mangiare e bere a Lanzarote: la cucina canaria, i prodotti nati dalla terra vulcanica e cosa
+  si può riportare a casa. In hotel avete la mezza pensione, quindi qui conta soprattutto il pranzo durante le
+  gite: i posti per ogni giorno sono nella vista Mappa, alla voce <b>Ristoranti</b>.</p>
+  <nav class="gm-toc">${toc.map(([id,l])=>`<a href="#gm-${id}">${l}</a>`).join('')}</nav>
+
+  <section id="gm-pratica"><h3><span class="n">01</span> Come funziona mangiare a Lanzarote</h3>
+    <h4>Orari spagnoli, ma non troppo</h4>
+    <p>Gli spagnoli pranzano tra le 13 e le 15:30 e cenano tardi. Nelle zone turistiche le cucine sono aperte
+    quasi tutto il giorno, quindi con le bambine non è un problema.</p>
+    <h4>L’acqua si compra</h4>
+    <p>L’acqua del rubinetto è dissalata: va bene per lavarsi i denti, ma da bere si usa quella in bottiglia,
+    come fanno gli abitanti. Al ristorante l’acqua si ordina e si paga.</p>
+    <h4>Prezzi e mancia</h4>
+    <p>Alle Canarie non c’è l’IVA ma l’<b>IGIC</b>, un’imposta più bassa: per questo molte cose costano un po’
+    meno che in Spagna o in Italia. La mancia non è obbligatoria: se il servizio è stato buono si lascia il 5-10%.</p>
+    <h4>Supermercati</h4>
+    <p>Le catene più diffuse sono <b>HiperDino</b>, <b>SPAR</b> e <b>Lidl</b>. Per i pranzi al sacco delle
+    giornate in spiaggia basta il supermercato di Playa Blanca.</p>
+  </section>
+
+  <section id="gm-salato"><h3><span class="n">02</span> Piatti salati</h3>
+    <div class="dishes">
+      ${dish('Papas arrugadas con mojo','patate “rugose”','Patate piccole bollite con la buccia in acqua molto salata, finché la buccia si raggrinzisce e si copre di un velo di sale. Si intingono nel <b>mojo rojo</b> (peperoncino, aglio, cumino, olio) o nel <b>mojo verde</b> (coriandolo o prezzemolo).','Il piatto canario per eccellenza, ovunque e a qualunque ora. Il mojo rojo può pizzicare: per le bambine, il verde.','top',B_TOP+B_KID)}
+      ${dish('Queso asado con mojo','formaggio di capra alla piastra','Fette di formaggio di capra scottate alla piastra, servite con mojo rosso e verde o con miele di palma.','Antipasto da dividere, ottimo per assaggiare il formaggio locale.',null,B_TOP)}
+      ${dish('Pescado a la plancha','pesce alla piastra','Il pesce dell’Atlantico cucinato semplice: <b>vieja</b> (pesce pappagallo, carne bianca e delicata), <b>cherne</b>, <b>sama</b>. Con papas arrugadas e insalata.','A El Golfo, sul mare, è la scelta naturale. Chiedete il pescato del giorno.')}
+      ${dish('Sancocho canario','pesce salato con patate','Pesce salato, di solito cherne, bollito e servito con patate, batata, mojo e una palla di <b>gofio</b> impastato.','Piatto di casa, robusto. Si trova nei ristoranti tradizionali.')}
+      ${dish('Lapas','patelle','Molluschi di scoglio cotti alla piastra nel loro guscio con mojo verde. Si staccano con la forchetta e si mangiano in un boccone.','Antipasto di mare tipico delle isole. Per gli adulti curiosi.')}
+      ${dish('Pulpo','polpo','Polpo alla piastra o in insalata, spesso con papas arrugadas.','Lo trovate quasi in ogni carta di pesce.')}
+      ${dish('Conejo en salmorejo e carne de cabra','coniglio e capra','Coniglio marinato e cotto in una salsa di aglio, peperoncino, vino e spezie; carne di capra in umido. La cucina di terra delle isole.','Piatti dell’entroterra, da cercare a Haría o a Teguise.')}
+    </div>
+  </section>
+
+  <section id="gm-isola"><h3><span class="n">03</span> Prodotti dell’isola</h3>
+    <p>Lanzarote è un’isola arida e ventosa, ricoperta di cenere vulcanica: i contadini hanno imparato a
+    coltivare proprio grazie a quella cenere, che trattiene l’umidità della notte. Da qui vengono i prodotti
+    più tipici.</p>
+    <div class="dishes">
+      ${dish('Malvasía volcánica','il vino di La Geria','Il vitigno simbolo dell’isola, coltivato nelle buche nella cenere di La Geria. Bianco secco o dolce, profumato, sapido. Denominazione d’origine Lanzarote.','Si assaggia alla Bodega El Grifo il 7/12 (giorno feriale, verificate se festivo).','top',B_TOP)}
+      ${dish('Batata','patata dolce','La patata dolce coltivata nella zona sabbiosa del Jable, nel centro-nord dell’isola. Si trova nel sancocho, al forno e nei dolci.','La stagione è l’inverno: a dicembre è dappertutto.',null,B_SEA)}
+      ${dish('Gofio','farina tostata','Farina di cereali tostati, mais o grano, eredità dei primi abitanti delle isole. Si mescola al latte, si impasta con il brodo, si usa nei dolci e perfino nei gelati.','Il mulino del Jardín de Cactus macinava proprio gofio.')}
+      ${dish('Sal de Janubio','sale marino','Il sale delle saline di Janubio, raccolto a mano. Ci sono anche versioni aromatizzate.','Si vede il 3/12 e si compra in molti negozi. Souvenir leggero.')}
+      ${dish('Formaggio di capra','queso de cabra','Formaggi di capra freschi, semistagionati e stagionati, a volte con la crosta passata nella paprika o nel gofio. Il più famoso delle isole è il <b>Majorero</b> di Fuerteventura, a denominazione d’origine.','Se l’8/12 andate a Corralejo, è l’occasione per comprarlo all’origine.')}
+    </div>
+  </section>
+
+  <section id="gm-dolci"><h3><span class="n">04</span> Dolci</h3>
+    <div class="dishes">
+      ${dish('Truchas de batata','i dolci di Natale','Mezzelune di pasta fritte o al forno, ripiene di patata dolce, mandorle, cannella e scorza di limone. Si fanno per Natale.','A dicembre iniziano a comparire nelle pasticcerie.','top',B_SEA)}
+      ${dish('Bienmesabe','“mi sa di buono”','Crema di mandorle, miele e tuorlo d’uovo, spesso servita sopra il gelato.','Il dolce canario più citato. Molto dolce.',null,B_TOP)}
+      ${dish('Quesillo','flan canario','Un budino simile al crème caramel, fatto con latte condensato: più denso e più dolce.','Lo prendono volentieri anche i bambini.',null,B_KID)}
+      ${dish('Frangollo','budino di mais','Budino di farina di mais cotta nel latte, con uvetta, mandorle e cannella.','Dolce casalingo, più raro nei ristoranti turistici.')}
+      ${dish('Polvito uruguayo','dolce a strati','Strati di biscotto sbriciolato, crema, dulce de leche e panna, in coppa.','Nonostante il nome è diffusissimo alle Canarie.',null,B_KID)}
+    </div>
+  </section>
+
+  <section id="gm-bere"><h3><span class="n">05</span> Cosa bere</h3>
+    <div class="dishes">
+      ${dish('Barraquito','il caffè a strati','Caffè servito in bicchiere a strati: latte condensato, liquore, espresso, latte schiumato, con cannella e scorza di limone. Nato a Tenerife.','Esiste anche senza liquore. Per chi guida, il <b>leche y leche</b>: espresso con latte condensato e latte.',null,B_TOP)}
+      ${dish('Ron miel','rum al miele','Liquore di rum e miele, dolce, offerto spesso a fine pasto.','Per gli adulti. In bottiglia è un souvenir classico.')}
+      ${dish('Clipper','la bibita canaria','Bibita gassata alla fragola o all’arancia, molto dolce e colorata, prodotta alle Canarie.','Quella che chiederanno le gemelle.',null,B_KID)}
+    </div>
+  </section>
+
+  <section id="gm-bimbi"><h3><span class="n">06</span> Con le bambine</h3>
+    <ul>
+      <li>Le <b>papas arrugadas</b> piacciono quasi sempre: sono patate. Tenete il mojo verde, non quello rosso.</li>
+      <li>Pesce alla piastra, pollo e patatine si trovano ovunque.</li>
+      <li>In spiaggia non ci sono bar: <b>pranzo al sacco</b> e molta acqua.</li>
+      <li>A cena si mangia in hotel: niente stress da menu.</li>
+    </ul>
+  </section>
+
+  <section id="gm-calendario"><h3><span class="n">07</span> Calendario gastronomico del viaggio</h3>
+    <table class="gmcal">
+      <thead><tr><th>Data</th><th>Cosa cade quel giorno</th></tr></thead>
+      <tbody>
+        <tr><td class="d">mer 2/12</td><td>Arrivo. Cena in hotel.</td></tr>
+        <tr><td class="d">gio 3/12</td><td><b>Pranzo a El Diablo</b>, carne alla griglia sul vulcano, o pesce a El Golfo.</td></tr>
+        <tr><td class="d">ven 4/12</td><td>Spiaggia: <b>pranzo al sacco</b> comprato la mattina.</td></tr>
+        <tr><td class="d">sab 5/12</td><td>Nord. <b>Pranzo ad Haría</b>: conejo en salmorejo o carne di capra.</td></tr>
+        <tr><td class="d">dom 6/12</td><td><b>Mercato di Teguise</b>: formaggi, mojo, dolci. <span class="gmstop">Festivo</span>.</td></tr>
+        <tr><td class="d">lun 7/12</td><td><b>Malvasía</b> alla Bodega El Grifo, se aperta.</td></tr>
+        <tr><td class="d">mar 8/12</td><td>Se andate a Fuerteventura, <b>formaggio Majorero</b>. <span class="gmstop">Festivo</span>.</td></tr>
+        <tr><td class="d">mer 9/12</td><td>Mercato di Marina Rubicón, ultimi acquisti. Pranzo in aeroporto.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="gm-souvenir"><h3><span class="n">08</span> Da portare a casa</h3>
+    <div class="dishes">
+      ${dish('Mojo in vasetto','rosso e verde','Il sapore del viaggio, da rifare a casa con le patate.','È un liquido: va nel bagaglio da stiva.',null,B_TOP)}
+      ${dish('Sale di Janubio','sale marino','Leggero, economico, si conserva per sempre.','Va bene anche nel bagaglio a mano.')}
+      ${dish('Malvasía volcánica','una bottiglia','Il vino dell’isola. El Grifo è la cantina più nota.','In stiva.')}
+      ${dish('Gofio','farina tostata','Il prodotto più canario che ci sia, in sacchetti al supermercato.','Leggero e non è un liquido.')}
+    </div>
+    <div class="gm-box att"><span class="bt">Due attenzioni</span>
+      <p><b>Un solo bagaglio da stiva:</b> è quello di Vincenzo. Vasetti, bottiglie e creme oltre i 100 ml vanno lì,
+      quindi decidete prima quanto spazio lasciare.</p>
+      <p><b>Alcolici:</b> le Canarie sono fuori dall’area IVA dell’Unione Europea, quindi per alcol e tabacco
+      valgono i limiti dei viaggi extra-UE: per adulto, 4 litri di vino e 1 litro di superalcolici.</p>
+    </div>
+  </section>
+
+  <div class="gm-foot"><b>Fonti.</b> Guide gastronomiche di Lanzarote e delle Canarie, siti di Bodegas El Grifo e
+  del Cabildo di Lanzarote. Orari e prezzi raccolti a novembre 2026: ricontrollateli prima di partire.
+  I consigli per ogni giorno restano nella vista <b>Mappa</b>.</div>
+</div>`;
+  gv.dataset.done='1';
+}
+
+/* ===== RIDIMENSIONAMENTO PANNELLO (solo desktop, mouse) ===== */
+(function(){
+  const MOBILE=760, MIN=250, MAXF=.72, KEY='panelW';
+  const gutter=document.getElementById('gutter');
+  const panel=document.getElementById('panel');
+  const main=document.getElementById('main');
+  let dragging=false, raf=0;
+
+  const isDesktop=()=>window.innerWidth>MOBILE;
+
+  function apply(w){
+    panel.style.width=w+'px';
+    panel.style.maxWidth='none';   // il max-width:42% del CSS altrimenti vince
+    if(!raf)raf=requestAnimationFrame(()=>{raf=0;map.invalidateSize();});
+  }
+  // su mobile il layout è a colonna: qualsiasi width inline romperebbe il 100%
+  function sync(){
+    if(!isDesktop()){ panel.style.width=''; panel.style.maxWidth=''; return; }
+    const saved=parseInt(localStorage.getItem(KEY),10);
+    if(saved) apply(Math.max(MIN,Math.min(saved,main.clientWidth*MAXF)));
+  }
+
+  function move(e){
+    if(!dragging)return;
+    const w=e.clientX-main.getBoundingClientRect().left;
+    apply(Math.max(MIN,Math.min(w,main.clientWidth*MAXF)));
+    e.preventDefault();
+  }
+  function stop(){
+    if(!dragging)return;
+    dragging=false;
+    gutter.classList.remove('dragging');
+    document.body.classList.remove('resizing');
+    localStorage.setItem(KEY,parseInt(panel.style.width,10)||360);
+    map.invalidateSize();
+  }
+  gutter.addEventListener('mousedown',e=>{
+    if(!isDesktop())return;
+    dragging=true;
+    gutter.classList.add('dragging');
+    document.body.classList.add('resizing');
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',move);
+  document.addEventListener('mouseup',stop);
+  gutter.addEventListener('dblclick',()=>{
+    if(!isDesktop())return;
+    localStorage.removeItem(KEY);
+    panel.style.width='360px'; panel.style.maxWidth='';
+    map.invalidateSize();
+  });
+  window.addEventListener('resize',sync);
+  sync();
+})();
+
+const themebtn=document.getElementById('themebtn');
+function applyTheme(dark){
+  document.body.classList.toggle('dark',dark);
+  themebtn.textContent=dark?'☀️':'🌙';
+  setTiles(dark);
+}
+themebtn.addEventListener('click',()=>{
+  const dark=!document.body.classList.contains('dark');
+  applyTheme(dark);
+  try{localStorage.setItem('lz26-theme',dark?'dark':'light');}catch(e){}
+});
+(function(){
+  let saved=null; try{saved=localStorage.getItem('lz26-theme');}catch(e){}
+  applyTheme(saved?saved==='dark':!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches));
+})();
+
+const sel=document.getElementById('daysel');
+DAYS.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.id;sel.appendChild(o);});
+const prevBtn=document.getElementById('prevday'), nextBtn=document.getElementById('nextday');
+function go(i){
+  i=Math.max(0,Math.min(DAYS.length-1,i));
+  sel.value=i; draw(i);
+  prevBtn.disabled=i===0; nextBtn.disabled=i===DAYS.length-1;
+  if(history.replaceState)history.replaceState(null,'','#'+(i+1));
+}
+sel.addEventListener('change',e=>go(+e.target.value));
+prevBtn.addEventListener('click',()=>go(+sel.value-1));
+nextBtn.addEventListener('click',()=>go(+sel.value+1));
+
+/* All'apertura: il giorno nel link (#1..#8), altrimenti il giorno di oggi con l'ora
+   di Lanzarote (non quella del dispositivo), altrimenti il primo giorno. */
+const TRIP_YEAR=2026;
+function localToday(){
+  try{ return new Intl.DateTimeFormat('sv-SE',{timeZone:'Atlantic/Canary'}).format(new Date()); }  // YYYY-MM-DD
+  catch(e){ return new Date().toISOString().slice(0,10); }
+}
+function dayIndexForToday(){
+  const today=localToday(); let found=-1;
+  DAYS.forEach((d,i)=>{
+    const m=/^(\d{1,2})\/(\d{1,2})/.exec(d.id); if(!m)return;
+    const iso=TRIP_YEAR+'-'+String(+m[2]).padStart(2,'0')+'-'+String(+m[1]).padStart(2,'0');
+    if(iso===today)found=i;
+  });
+  return found;
+}
+const fromHash=parseInt((location.hash||'').slice(1),10);
+const todayIdx=dayIndexForToday();
+go(fromHash>=1&&fromHash<=DAYS.length?fromHash-1:(todayIdx>=0?todayIdx:0));
+
+</script>
+</body>
+</html>
