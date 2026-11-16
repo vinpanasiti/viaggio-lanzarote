@@ -1,0 +1,300 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//vinxares//Viaggio Lanzarote 2026//IT
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Viaggio Lanzarote
+X-WR-TIMEZONE:Atlantic/Canary
+BEGIN:VTIMEZONE
+TZID:Europe/Rome
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VTIMEZONE
+TZID:Atlantic/Canary
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+TZNAME:WEST
+DTSTART:19700329T010000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+TZNAME:WET
+DTSTART:19701025T020000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:lz26-todo@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Europe/Rome:20261117T090000
+DTEND;TZID=Europe/Rome:20261117T091500
+SUMMARY:Lanzarote: spostare auto e prenotare Timanfaya
+DESCRIPTION:1. CICAR\, prenotazione 7E5DG: spostare la riconsegna del 9/12 
+ dalle 16:00 alle 14:00 (app CICAR o +34 928 822 900).\n2. Timanfaya: compr
+ are online il biglietto per giovedì 3/12 alle 10:30 (gratis le bambine so
+ tto i 7 anni).\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares
+ .cc/
+URL:https://viaggio-lanzarote.vinxares.cc/
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Lanzarote: auto e Timanfaya
+TRIGGER:-PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-viaggio@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;VALUE=DATE:20261202
+DTEND;VALUE=DATE:20261210
+SUMMARY:🏝️ Lanzarote
+DESCRIPTION:Gran Tagoro 5*\, Family & Fun\, Playa Blanca: prenotazione M871
+ 6453\, mezza pensione\, si paga all’arrivo. Tel. 0034 922 979 281.\nVoli
+  Ryanair VTVHQR. Auto CICAR 7E5DG.\n\nProgramma del giorno: https://viaggi
+ o-lanzarote.vinxares.cc/
+LOCATION:Gran Castillo Tagoro Family & Fun\, Calle Hoya de Afre 2\, Playa B
+ lanca
+URL:https://viaggio-lanzarote.vinxares.cc/
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-volo-andata@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Europe/Rome:20261202T125500
+DTEND;TZID=Atlantic/Canary:20261202T160000
+SUMMARY:✈️ FR9463 Malpensa → Lanzarote
+DESCRIPTION:Ryanair\, prenotazione VTVHQR. Passeggeri: Vincenzo Panasiti\, 
+ Roberta Romeo\, Francesca Panasiti\, Caterina Panasiti.\nUn bagaglio da st
+ iva da 20 kg (Vincenzo). Carte d’imbarco solo nell’app Ryanair.\nArriv
+ o alle 16:00 ora di Lanzarote (17:00 in Italia).\n\nProgramma del giorno: 
+ https://viaggio-lanzarote.vinxares.cc/#1
+LOCATION:Aeroporto di Milano Malpensa
+URL:https://viaggio-lanzarote.vinxares.cc/#1
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Check-in online Ryanair per tutti e quattro (VTVHQR)
+TRIGGER:-P1D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Partenza per Malpensa: volo FR9463 alle 12:55
+TRIGGER:-PT3H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-auto-ritiro@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261202T161500
+DTEND;TZID=Atlantic/Canary:20261202T164500
+SUMMARY:🚗 Ritiro auto CICAR
+DESCRIPTION:Prenotazione 7E5DG\, conducente Vincenzo Panasiti: serve la sua
+  patente. Jeep Compass o simile\, 2 seggiolini. 320\,95 € tutto compreso
+ .\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#1
+LOCATION:Aeropuerto de Lanzarote\, Terminal 1\, banco CICAR
+URL:https://viaggio-lanzarote.vinxares.cc/#1
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-checkin@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261202T171500
+DTEND;TZID=Atlantic/Canary:20261202T174500
+SUMMARY:🏨 Check-in Gran Tagoro
+DESCRIPTION:Prenotazione M8716453. Al check-in servono i documenti di tutti
+ \, anche delle bambine. Pagamento all’arrivo con la carta di chi alloggi
+ a.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#1
+LOCATION:Gran Castillo Tagoro Family & Fun\, Calle Hoya de Afre 2\, Playa B
+ lanca
+URL:https://viaggio-lanzarote.vinxares.cc/#1
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-timanfaya@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261203T103000
+DTEND;TZID=Atlantic/Canary:20261203T120000
+SUMMARY:🌋 Timanfaya\, Montañas del Fuego
+DESCRIPTION:Biglietto online con orario: senza non si entra. Prima\, alle 9
+ :30\, i dromedari all’Echadero de los Camellos. Dopo\, pranzo a El Diabl
+ o (12-16\, senza prenotazione)\, poi El Golfo\, Los Hervideros e Salinas d
+ e Janubio.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/
+ #2
+LOCATION:Montañas del Fuego\, Timanfaya
+URL:https://viaggio-lanzarote.vinxares.cc/#2
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Partenza per Timanfaya: prima i dromedari
+TRIGGER:-PT1H30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-papagayo@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261204T100000
+DTEND;TZID=Atlantic/Canary:20261204T140000
+SUMMARY:🏖️ Playas de Papagayo
+DESCRIPTION:Parcheggio 3 €\, solo carta. Pranzo al sacco: in spiaggia non
+  ci sono servizi.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxa
+ res.cc/#3
+LOCATION:Playa de Papagayo\, Lanzarote
+URL:https://viaggio-lanzarote.vinxares.cc/#3
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-nord@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261205T090000
+DTEND;TZID=Atlantic/Canary:20261205T170000
+SUMMARY:🗺️ Il nord: Jameos del Agua\, Mirador del Río\, Haría\, Jard
+ ín de Cactus
+DESCRIPTION:Partenza verso le 9\, circa un’ora di auto. Jameos del Agua 1
+ 0:00\, Mirador del Río\, pranzo ad Haría\, Jardín de Cactus (ultimo ing
+ resso 16:30). Cueva de los Verdes solo con biglietto online.\n\nProgramma 
+ del giorno: https://viaggio-lanzarote.vinxares.cc/#4
+LOCATION:Jameos del Agua\, Lanzarote
+URL:https://viaggio-lanzarote.vinxares.cc/#4
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-teguise@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261206T093000
+DTEND;TZID=Atlantic/Canary:20261206T130000
+SUMMARY:🛍️ Mercato di Teguise
+DESCRIPTION:Mercato della domenica 9-14. Arrivare entro le 9:30 per il parc
+ heggio. Pranzo a Teguise.\n\nProgramma del giorno: https://viaggio-lanzaro
+ te.vinxares.cc/#5
+LOCATION:Teguise\, Lanzarote
+URL:https://viaggio-lanzarote.vinxares.cc/#5
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-fondazione@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261206T143000
+DTEND;TZID=Atlantic/Canary:20261206T160000
+SUMMARY:🏛️ Fundación César Manrique
+DESCRIPTION:Tutti i giorni 10-17:30\, biglietteria fino alle 17:00\, 10 €
+ . LagOmar opzionale.\n\nProgramma del giorno: https://viaggio-lanzarote.vi
+ nxares.cc/#5
+LOCATION:Fundación César Manrique\, Taro de Tahíche
+URL:https://viaggio-lanzarote.vinxares.cc/#5
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-bambine@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261207T100000
+DTEND;TZID=Atlantic/Canary:20261207T140000
+SUMMARY:🦁 Rancho Texas oppure sottomarino
+DESCRIPTION:Una delle due: Rancho Texas Lanzarote Park (Puerto del Carmen\,
+  9:30-17:30) oppure Submarine Safaris (Puerto Calero\, da prenotare). Poi 
+ La Geria e la Bodega El Grifo.\n\nProgramma del giorno: https://viaggio-la
+ nzarote.vinxares.cc/#6
+LOCATION:Rancho Texas Lanzarote Park\, Puerto del Carmen
+URL:https://viaggio-lanzarote.vinxares.cc/#6
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-libera@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261208T093000
+DTEND;TZID=Atlantic/Canary:20261208T160000
+SUMMARY:⛴️ Giornata libera: Fuerteventura o Montaña Roja
+DESCRIPTION:Festa dell’Immacolata. Fuerteventura: traghetto Playa Blanca 
+ → Corralejo\, 25-35 min\, e le dune. Oppure Montaña Roja e tramonto al 
+ faro di Pechiguera.\n\nProgramma del giorno: https://viaggio-lanzarote.vin
+ xares.cc/#7
+LOCATION:Puerto de Playa Blanca
+URL:https://viaggio-lanzarote.vinxares.cc/#7
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-checkout@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261209T103000
+DTEND;TZID=Atlantic/Canary:20261209T110000
+SUMMARY:🏨 Check-out Gran Tagoro
+DESCRIPTION:Check-out entro le 11:00. Prima\, il mercato di Marina Rubicón
+  (mercoledì 9-14).\n\nProgramma del giorno: https://viaggio-lanzarote.vin
+ xares.cc/#8
+LOCATION:Gran Castillo Tagoro Family & Fun\, Playa Blanca
+URL:https://viaggio-lanzarote.vinxares.cc/#8
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Check-out entro le 11:00
+TRIGGER:-PT30M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-auto-riconsegna@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261209T140000
+DTEND;TZID=Atlantic/Canary:20261209T141500
+SUMMARY:🚗 Riconsegna auto CICAR
+DESCRIPTION:Prenotazione 7E5DG. Attenzione: nella prenotazione la riconsegn
+ a è alle 16:00\, ma il volo parte alle 16:35 e la consegna bagagli chiude
+  alle 15:55. Va spostata alle 14:00.\n\nProgramma del giorno: https://viag
+ gio-lanzarote.vinxares.cc/#8
+LOCATION:Aeropuerto de Lanzarote\, Terminal 1
+URL:https://viaggio-lanzarote.vinxares.cc/#8
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Partenza per l’aeroporto: riconsegna auto alle 14:00
+TRIGGER:-PT1H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lz26-volo-ritorno@vinxares.cc
+DTSTAMP:20261116T090000Z
+SEQUENCE:0
+DTSTART;TZID=Atlantic/Canary:20261209T163500
+DTEND;TZID=Europe/Rome:20261209T213000
+SUMMARY:✈️ FR9462 Lanzarote → Malpensa
+DESCRIPTION:Ryanair\, prenotazione VTVHQR. Un bagaglio da stiva da 20 kg (V
+ incenzo). Carte d’imbarco solo nell’app Ryanair.\n\nProgramma del gior
+ no: https://viaggio-lanzarote.vinxares.cc/#8
+LOCATION:Aeropuerto de Lanzarote
+URL:https://viaggio-lanzarote.vinxares.cc/#8
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Check-in online Ryanair per il ritorno (VTVHQR)
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+END:VCALENDAR

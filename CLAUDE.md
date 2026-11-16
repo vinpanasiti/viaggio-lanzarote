@@ -8,7 +8,14 @@ a Lanzarote del 2-9 dicembre 2026. Stessa impostazione del sito `viaggio-edimbur
 ```
 wrangler.jsonc      config Worker: pubblica solo ./public
 public/index.html   il sito, file singolo (HTML + CSS + JS inline, mappa Leaflet su OpenStreetMap)
+public/lanzarote-2026.ics   calendario del viaggio, scaricabile dalla Checklist
 ```
+
+## Calendario
+
+`lanzarote-2026.ics` è un file da importare (METHOD:PUBLISH), senza invitati: importare un .ics
+non manda inviti a nessuno. Per far arrivare gli eventi a un'altra persona si importa il file in un
+calendario dedicato e si condivide quel calendario. Se cambiano orari nel sito, va aggiornato anche il file.
 
 ## Viste
 
@@ -35,7 +42,8 @@ Ogni push su `main` ripubblica il sito tramite Cloudflare Workers Builds.
 
 ## Regole per le modifiche
 
-- Non inserire nel sito codici di prenotazione o link di gestione delle prenotazioni:
-  il sito è raggiungibile da chiunque abbia l'URL.
+- Il dominio è protetto da Cloudflare Access: codici di prenotazione e nomi dei passeggeri
+  si possono inserire. Mai i link di gestione delle prenotazioni (contengono un token che
+  permette di modificarle o cancellarle). Se Access viene disattivato, togliere anche i codici.
 - L'array `DAYS` è in ordine di data: spostare un giorno significa spostare il blocco.
 - Le tratte (`legs`) usano `H` per l'hotel e `<track><n>` per le tappe (es. `blu2`).
