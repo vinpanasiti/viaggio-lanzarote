@@ -13,9 +13,17 @@ public/lanzarote-2026.ics   calendario del viaggio, scaricabile dalla Checklist
 
 ## Calendario
 
-`lanzarote-2026.ics` è un file da importare (METHOD:PUBLISH), senza invitati: importare un .ics
-non manda inviti a nessuno. Per far arrivare gli eventi a un'altra persona si importa il file in un
-calendario dedicato e si condivide quel calendario. Se cambiano orari nel sito, va aggiornato anche il file.
+Importare un .ics non manda inviti a nessuno, anche se nel file ci sono gli invitati: gli inviti
+partono solo dal calendario di chi crea l'evento.
+
+- **Inviti** (in cima alla Checklist): array `CAL`, un link Google Calendar per evento
+  (`action=TEMPLATE`, con `add=` per gli ospiti). Le email degli invitati si scrivono nella
+  pagina e restano solo nel browser (`lz26-guests`); nel sito non ci sono indirizzi email.
+  Chi apre il link salva l'evento e Google manda l'invito.
+- `lanzarote-2026.ics`: lo stesso elenco in un file da importare (METHOD:PUBLISH), senza invitati.
+
+`CAL` e il file .ics vengono dalla stessa lista di eventi: se cambiano gli orari nel sito, vanno
+aggiornati entrambi.
 
 ## Viste
 

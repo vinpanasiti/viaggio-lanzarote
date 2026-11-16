@@ -216,6 +216,22 @@
   .ckrow.done{opacity:.6} .ckrow.done .t{text-decoration:line-through}
   .ckbar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden;margin:4px 0 4px}
   .ckbar i{display:block;height:100%;background:var(--verde)}
+  .calbox{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--soft);margin-bottom:6px}
+  .callbl{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px}
+  #guests{width:100%;font-size:15px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)}
+  .calhint{font-size:11.5px;color:var(--text2);line-height:1.5;margin:8px 0}
+  .calhint a{color:var(--blu)}
+  .calwarn{font-size:12px;color:var(--rosso);font-weight:600;margin:6px 0 8px}
+  .callist{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+  .calrow{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+  .calrow:last-child{border-bottom:none}
+  .calrow:hover{background:var(--hover)}
+  .calrow .cw{flex:none;width:170px;font-size:11.5px;color:var(--text2)}
+  .calrow .ct{flex:1;min-width:0;font-size:13px}
+  .calrow .cg{flex:none;font-size:11.5px;font-weight:700;color:var(--blu);white-space:nowrap}
+  .calrow.sent .cg{color:var(--verde)}
+  .calrow.sent .ct{color:var(--text2)}
+  @media(max-width:760px){.calrow{flex-wrap:wrap;gap:2px 10px}.calrow .cw{width:100%}}
   @media(max-width:760px){
     #daynav{width:100%} #daynav select{flex:1}
     .ck{padding:14px}
@@ -438,6 +454,8 @@ const CHECK=[
   {id:'feste',text:'6 e 8 dicembre festivi in Spagna',small:'I centri turistici sono aperti, alcuni negozi no.'},
   {id:'papagayo',text:'Una carta in tasca per il parcheggio di Papagayo',small:'3 €, solo pagamento elettronico.'}]}
 ];
+
+const CAL=[{"id": "viaggio", "title": "🏝️ Lanzarote", "dates": "20261202/20261210", "when": "2-9 dicembre", "details": "Gran Tagoro 5*, Family & Fun, Playa Blanca: prenotazione M8716453, mezza pensione, si paga all’arrivo. Tel. 0034 922 979 281.\nVoli Ryanair VTVHQR. Auto CICAR 7E5DG.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/", "loc": "Gran Castillo Tagoro Family & Fun, Calle Hoya de Afre 2, Playa Blanca"}, {"id": "volo-andata", "title": "✈️ FR9463 Malpensa → Lanzarote", "dates": "20261202T115500Z/20261202T160000Z", "when": "mer 2/12 · 12:55 ora italiana", "details": "Ryanair, prenotazione VTVHQR. Passeggeri: Vincenzo Panasiti, Roberta Romeo, Francesca Panasiti, Caterina Panasiti.\nUn bagaglio da stiva da 20 kg (Vincenzo). Carte d’imbarco solo nell’app Ryanair.\nArrivo alle 16:00 ora di Lanzarote (17:00 in Italia).\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#1", "loc": "Aeroporto di Milano Malpensa"}, {"id": "auto-ritiro", "title": "🚗 Ritiro auto CICAR", "dates": "20261202T161500Z/20261202T164500Z", "when": "mer 2/12 · 16:15", "details": "Prenotazione 7E5DG, conducente Vincenzo Panasiti: serve la sua patente. Jeep Compass o simile, 2 seggiolini. 320,95 € tutto compreso.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#1", "loc": "Aeropuerto de Lanzarote, Terminal 1, banco CICAR"}, {"id": "checkin", "title": "🏨 Check-in Gran Tagoro", "dates": "20261202T171500Z/20261202T174500Z", "when": "mer 2/12 · 17:15", "details": "Prenotazione M8716453. Al check-in servono i documenti di tutti, anche delle bambine. Pagamento all’arrivo con la carta di chi alloggia.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#1", "loc": "Gran Castillo Tagoro Family & Fun, Calle Hoya de Afre 2, Playa Blanca"}, {"id": "timanfaya", "title": "🌋 Timanfaya, Montañas del Fuego", "dates": "20261203T103000Z/20261203T120000Z", "when": "gio 3/12 · 10:30", "details": "Biglietto online con orario: senza non si entra. Prima, alle 9:30, i dromedari all’Echadero de los Camellos. Dopo, pranzo a El Diablo (12-16, senza prenotazione), poi El Golfo, Los Hervideros e Salinas de Janubio.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#2", "loc": "Montañas del Fuego, Timanfaya"}, {"id": "papagayo", "title": "🏖️ Playas de Papagayo", "dates": "20261204T100000Z/20261204T140000Z", "when": "ven 4/12 · 10:00", "details": "Parcheggio 3 €, solo carta. Pranzo al sacco: in spiaggia non ci sono servizi.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#3", "loc": "Playa de Papagayo, Lanzarote"}, {"id": "nord", "title": "🗺️ Il nord: Jameos del Agua, Mirador del Río, Haría, Jardín de Cactus", "dates": "20261205T090000Z/20261205T170000Z", "when": "sab 5/12 · 9:00", "details": "Partenza verso le 9, circa un’ora di auto. Jameos del Agua 10:00, Mirador del Río, pranzo ad Haría, Jardín de Cactus (ultimo ingresso 16:30). Cueva de los Verdes solo con biglietto online.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#4", "loc": "Jameos del Agua, Lanzarote"}, {"id": "teguise", "title": "🛍️ Mercato di Teguise", "dates": "20261206T093000Z/20261206T130000Z", "when": "dom 6/12 · 9:30", "details": "Mercato della domenica 9-14. Arrivare entro le 9:30 per il parcheggio. Pranzo a Teguise.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#5", "loc": "Teguise, Lanzarote"}, {"id": "fondazione", "title": "🏛️ Fundación César Manrique", "dates": "20261206T143000Z/20261206T160000Z", "when": "dom 6/12 · 14:30", "details": "Tutti i giorni 10-17:30, biglietteria fino alle 17:00, 10 €. LagOmar opzionale.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#5", "loc": "Fundación César Manrique, Taro de Tahíche"}, {"id": "bambine", "title": "🦁 Rancho Texas oppure sottomarino", "dates": "20261207T100000Z/20261207T140000Z", "when": "lun 7/12 · 10:00", "details": "Una delle due: Rancho Texas Lanzarote Park (Puerto del Carmen, 9:30-17:30) oppure Submarine Safaris (Puerto Calero, da prenotare). Poi La Geria e la Bodega El Grifo.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#6", "loc": "Rancho Texas Lanzarote Park, Puerto del Carmen"}, {"id": "libera", "title": "⛴️ Giornata libera: Fuerteventura o Montaña Roja", "dates": "20261208T093000Z/20261208T160000Z", "when": "mar 8/12 · 9:30", "details": "Festa dell’Immacolata. Fuerteventura: traghetto Playa Blanca → Corralejo, 25-35 min, e le dune. Oppure Montaña Roja e tramonto al faro di Pechiguera.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#7", "loc": "Puerto de Playa Blanca"}, {"id": "checkout", "title": "🏨 Check-out Gran Tagoro", "dates": "20261209T103000Z/20261209T110000Z", "when": "mer 9/12 · 10:30", "details": "Check-out entro le 11:00. Prima, il mercato di Marina Rubicón (mercoledì 9-14).\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#8", "loc": "Gran Castillo Tagoro Family & Fun, Playa Blanca"}, {"id": "auto-riconsegna", "title": "🚗 Riconsegna auto CICAR", "dates": "20261209T140000Z/20261209T141500Z", "when": "mer 9/12 · 14:00", "details": "Prenotazione 7E5DG. Riconsegna entro le 16:00; il volo parte alle 16:35 e la consegna bagagli chiude alle 15:55, quindi meglio verso le 14:00.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#8", "loc": "Aeropuerto de Lanzarote, Terminal 1"}, {"id": "volo-ritorno", "title": "✈️ FR9462 Lanzarote → Malpensa", "dates": "20261209T163500Z/20261209T203000Z", "when": "mer 9/12 · 16:35", "details": "Ryanair, prenotazione VTVHQR. Un bagaglio da stiva da 20 kg (Vincenzo). Carte d’imbarco solo nell’app Ryanair.\n\nProgramma del giorno: https://viaggio-lanzarote.vinxares.cc/#8", "loc": "Aeropuerto de Lanzarote"}];
 
 const map=L.map('map',{scrollWheelZoom:true}).setView([28.96,-13.65],10);
 /* Sfondo OpenStreetMap (CARTO ora chiede una chiave). Il tema scuro è un filtro CSS sulle tessere. */
@@ -716,9 +734,9 @@ function ckSave(o){try{localStorage.setItem('lz26-check',JSON.stringify(o));}cat
 function buildCheck(){
   const el=document.getElementById('checkview'); const st=ckLoad();
   const all=CHECK.flatMap(g=>g.items), done=all.filter(i=>st[i.id]).length;
-  el.innerHTML=`<div class="ck"><h2>Prima di partire</h2>
+  el.innerHTML=`<div class="ck">${calHTML()}
+    <h2 style="margin-top:26px">Prima di partire</h2>
     <p class="sub">Documenti, prenotazioni e cose da sapere. Le spunte restano salvate su questo dispositivo · ${done} su ${all.length}</p>
-    <p style="margin:0 0 14px"><a class="svcbtn" href="lanzarote-2026.ics" download>📅 Scarica il calendario del viaggio (.ics)</a></p>
     <div class="ckbar"><i style="width:${(done/all.length*100).toFixed(0)}%"></i></div>
     ${CHECK.map(g=>`<h3>${g.title}</h3>`+g.items.map(i=>`<label class="ckrow${st[i.id]?' done':''}">
       <input type="checkbox" data-id="${i.id}"${st[i.id]?' checked':''}><span><span class="t">${i.text}</span><small>${i.small}</small></span></label>`).join('')).join('')}
@@ -726,7 +744,51 @@ function buildCheck(){
   el.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{
     const s=ckLoad(); s[cb.dataset.id]=cb.checked; ckSave(s); buildCheck();
   }));
+  wireCal(el);
 }
+
+/* ===== INVITI: un link Google Calendar per evento, con gli invitati già compilati =====
+   Importare un .ics non manda inviti a nessuno. Un evento creato e salvato da Google
+   Calendar con degli ospiti invece sì: Google chiede se inviare l'email e la manda. */
+const GKEY='lz26-guests', SKEY='lz26-sent';
+function gLoad(){try{return localStorage.getItem(GKEY)||'';}catch(e){return '';}}
+function gSave(v){try{localStorage.setItem(GKEY,v);}catch(e){}}
+function sLoad(){try{return JSON.parse(localStorage.getItem(SKEY)||'{}');}catch(e){return {};}}
+function sSave(o){try{localStorage.setItem(SKEY,JSON.stringify(o));}catch(e){}}
+function escA(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function cleanGuests(v){return v.split(/[\s,;]+/).map(x=>x.trim()).filter(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)).join(',');}
+function gcalUrl(e,guests){
+  const p=new URLSearchParams({action:'TEMPLATE',text:e.title,dates:e.dates,details:e.details,location:e.loc,ctz:'Atlantic/Canary'});
+  if(guests)p.set('add',guests);
+  return 'https://calendar.google.com/calendar/render?'+p.toString();
+}
+function calHTML(){
+  const g=gLoad(), sent=sLoad(), n=CAL.filter(e=>sent[e.id]).length;
+  return `<h2>Inviti nel calendario</h2>
+  <p class="sub">${n} su ${CAL.length} eventi creati</p>
+  <div class="calbox">
+    <label class="callbl" for="guests">Email degli invitati (più indirizzi separati da virgola)</label>
+    <input id="guests" type="text" inputmode="email" autocomplete="off" spellcheck="false" value="${escA(g)}" placeholder="nome@esempio.it">
+    <p class="calhint">Ogni riga apre Google Calendar con l’evento già compilato e gli invitati aggiunti. Controlla che l’invitato compaia, clicca <b>Salva</b> e, quando Google chiede se inviare gli inviti, rispondi <b>Invia</b>. Se l’invitato non compare, aggiungilo nel campo Invitati prima di salvare. Non serve mettere qui il tuo indirizzo: l’organizzatore sei tu.</p>
+    <div class="calwarn" id="calwarn"${cleanGuests(g)?' hidden':''}>Scrivi almeno un indirizzo: senza, l’evento si crea ma nessuno riceve l’invito.</div>
+    <div class="callist">${CAL.map(e=>`<a class="calrow${sent[e.id]?' sent':''}" data-id="${e.id}" target="_blank" rel="noopener" href="${escA(gcalUrl(e,cleanGuests(g)))}">
+      <span class="cw">${e.when}</span><span class="ct">${e.title}</span><span class="cg">${sent[e.id]?'✓ Creato':'Crea e invita ↗'}</span></a>`).join('')}</div>
+    <p class="calhint">Il segno ✓ ricorda su questo dispositivo quali eventi hai già aperto. Prima di iniziare, se hai importato il file, cancella il calendario “Viaggio Lanzarote” per non avere doppioni. Il file con tutti gli eventi resta qui: <a href="lanzarote-2026.ics" download>lanzarote-2026.ics</a> (importandolo non parte nessun invito).</p>
+  </div>`;
+}
+function wireCal(el){
+  const inp=el.querySelector('#guests'); if(!inp)return;
+  inp.addEventListener('input',()=>{
+    gSave(inp.value); const g=cleanGuests(inp.value);
+    el.querySelector('#calwarn').hidden=!!g;
+    el.querySelectorAll('.calrow').forEach(a=>{const e=CAL.find(x=>x.id===a.dataset.id);a.href=gcalUrl(e,g);});
+  });
+  el.querySelectorAll('.calrow').forEach(a=>a.addEventListener('click',()=>{
+    const s=sLoad(); s[a.dataset.id]=1; sSave(s);
+    a.classList.add('sent'); a.querySelector('.cg').textContent='✓ Creato';
+  }));
+}
+
 
 /* ===== GOURMET (contenuto statico, nessuna chiamata di rete) ===== */
 function dish(n,p,d,w,cls,badge){
